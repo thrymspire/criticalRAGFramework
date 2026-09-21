@@ -1397,7 +1397,10 @@ Ready to engage. Select an agent persona above, enter a directive, and click "En
           sendBtn.innerText = 'Send Directive ↵';
         }
 
-        // Remove cursor
+        // Remove cursor and populate text
+        if (!accumulatedAssistantText.trim()) {
+          accumulatedAssistantText = "[Inference Notice: No tokens returned. Check that llama-server is online on port 8080.]";
+        }
         const bubble = document.getElementById(`${turnId}_bubble`);
         if (bubble) bubble.innerHTML = escapeHtml(accumulatedAssistantText);
 

@@ -33,10 +33,19 @@ def calculate_entropy(top_candidates: List[Dict[str, Any]]) -> float:
     return max(0.0, float(entropy))
 
 
+def _probe_direct_http(server_url: str) -> bool:
+    """Fast probe whether server_url is directly reachable via HTTP within 150ms."""
+    try:
+        with urllib.request.urlopen(f"{server_url.rstrip('/')}/health", timeout=0.15) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+
 def _get_stream_lines(server_url: str, payload: dict) -> Generator[str, None, None]:
     """
-    Attempts direct HTTP streaming.
-    Falls back to Windows curl.exe bridge if connection is refused across WSL2 NAT boundary.
+    Attempts direct HTTP streaming if directly reachable.
+    Falls back to Windows curl.exe bridge if connection is across WSL2 NAT boundary.
     """
     endpoint = f"{server_url.rstrip('/')}/v1/chat/completions"
     data_bytes = json.dumps(payload).encode("utf-8")
@@ -46,18 +55,21 @@ def _get_stream_lines(server_url: str, payload: dict) -> Generator[str, None, No
         headers={"Content-Type": "application/json"}
     )
 
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            for line in resp:
-                decoded = line.decode("utf-8", errors="replace").strip()
-                if decoded:
-                    yield decoded
-        return
-    except Exception:
-        # Cross-boundary fallback: execute Windows curl.exe
-        win_curl = "/mnt/c/Windows/System32/curl.exe"
-        if not os.path.exists(win_curl):
-            win_curl = "curl.exe"
+    if _probe_direct_http(server_url):
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                for line in resp:
+                    decoded = line.decode("utf-8", errors="replace").strip()
+                    if decoded:
+                        yield decoded
+            return
+        except Exception:
+            pass
+
+    # Cross-boundary fallback: execute Windows curl.exe
+    win_curl = "/mnt/c/Windows/System32/curl.exe"
+    if not os.path.exists(win_curl):
+        win_curl = "curl.exe" if os.name == "nt" else "curl"
 
         cmd = [
             win_curl, "-s", "-N", "-X", "POST",

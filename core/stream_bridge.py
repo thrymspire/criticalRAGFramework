@@ -31,6 +31,15 @@ def calculate_entropy(top_candidates: List[Dict[str, Any]]) -> float:
     return max(0.0, -sum(p * math.log2(p) for p in norm if p > 0))
 
 
+def _probe_direct_http(server_url: str) -> bool:
+    """Fast probe whether server_url is directly reachable via HTTP within 150ms."""
+    try:
+        with urllib.request.urlopen(f"{server_url.rstrip('/')}/health", timeout=0.15) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+
 def stream_tokens_from_llama(
     prompt: str,
     server_url: str = "http://127.0.0.1:8080",
@@ -59,18 +68,32 @@ def stream_tokens_from_llama(
         headers={"Content-Type": "application/json", "User-Agent": "CriticalRAG-StreamingBridge"}
     )
 
-    try:
-        resp = urllib.request.urlopen(req, timeout=30)
-    except Exception:
-        # Fallback to curl.exe pipe for WSL2 environment if direct connection blocked
-        proc = subprocess.Popen(
-            ["curl.exe", "-sN", "-X", "POST", f"{server_url}/v1/chat/completions",
-             "-H", "Content-Type: application/json", "-d", payload_json],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-        resp = proc.stdout
+    resp = None
+    proc = None
+
+    # Probe direct HTTP first to avoid hanging 30 seconds on WSL2 NAT boundary
+    if _probe_direct_http(server_url):
+        try:
+            resp = urllib.request.urlopen(req, timeout=10)
+        except Exception:
+            resp = None
+
+    if resp is None:
+        # Cross-boundary fallback to Windows curl.exe bridge
+        win_curl = "/mnt/c/Windows/System32/curl.exe"
+        if not os.path.exists(win_curl):
+            win_curl = "curl.exe" if os.name == "nt" else "curl"
+        try:
+            proc = subprocess.Popen(
+                [win_curl, "-sN", "-X", "POST", f"{server_url.rstrip('/')}/v1/chat/completions",
+                 "-H", "Content-Type: application/json", "-d", payload_json],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            resp = proc.stdout
+        except Exception:
+            resp = []
 
     step_idx = 0
     full_text = ""
@@ -155,6 +178,28 @@ def stream_tokens_from_llama(
 
         yield schema_obj
         step_idx += 1
+
+    if proc is not None:
+        try:
+            proc.terminate()
+        except Exception:
+            pass
+
+    if step_idx == 0:
+        err_msg = "[NOTICE: Inference engine at port 8080 did not return tokens. Verify that llama-server.exe is running on host.]"
+        diagnostic_event = {
+            "step": 1,
+            "chosen_token": err_msg,
+            "logprob": 0.0,
+            "prob": 1.0,
+            "entropy": 0.0,
+            "top": [{"token": "[NOTICE]", "prob": 1.0}],
+            "status": "complete",
+            "running_text": err_msg
+        }
+        if on_token:
+            on_token(diagnostic_event)
+        yield diagnostic_event
 
 
 if __name__ == "__main__":
