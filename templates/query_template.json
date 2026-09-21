@@ -1,0 +1,10 @@
+{
+  "query_text": "What are the three invariants of Critical RAG?",
+  "top_k": 5,
+  "vector": [
+    0.012, -0.045, 0.089, 0.003
+  ],
+  "filters": {
+    "domain": "systems_architecture"
+  }
+}

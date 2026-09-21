@@ -1,0 +1,16 @@
+{
+  "chunk_id": "chunk_doc_001_0001",
+  "document_id": "doc_2026_09_sample_001",
+  "chunk_index": 1,
+  "parent_chunk_id": null,
+  "content": "The Critical Path RAG architecture enforces three invariants: State Isolation via PostgreSQL 18 with pgvector, Compute Isolation via a stateless transform node with direct silicon GPU access, and Ephemeral Verification via an on-demand evaluation gate.",
+  "token_count": 42,
+  "embedding": [
+    0.012, -0.045, 0.089, 0.003
+  ],
+  "metadata": {
+    "section": "1. Architectural Philosophy",
+    "level": "parent",
+    "token_window": 1024
+  }
+}

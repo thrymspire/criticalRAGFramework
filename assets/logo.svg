@@ -1,0 +1,263 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="100%" height="100%">
+  <defs>
+    <!-- Deep Cosmic Nebulae -->
+    <radialGradient id="nebula-purple-core" cx="50%" cy="44%" r="58%">
+      <stop offset="0%" stop-color="#9d5cff" stop-opacity="0.36" />
+      <stop offset="45%" stop-color="#4c1d95" stop-opacity="0.18" />
+      <stop offset="85%" stop-color="#150824" stop-opacity="0.06" />
+      <stop offset="100%" stop-color="#07030e" stop-opacity="0" />
+    </radialGradient>
+    
+    <radialGradient id="nebula-cyan-core" cx="50%" cy="46%" r="38%">
+      <stop offset="0%" stop-color="#5ffbf1" stop-opacity="0.28" />
+      <stop offset="50%" stop-color="#0d9488" stop-opacity="0.10" />
+      <stop offset="100%" stop-color="#07030e" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="flank-nebula-left" cx="15%" cy="35%" r="40%">
+      <stop offset="0%" stop-color="#c084fc" stop-opacity="0.14" />
+      <stop offset="100%" stop-color="#07030e" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="flank-nebula-right" cx="85%" cy="35%" r="40%">
+      <stop offset="0%" stop-color="#5ffbf1" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#07030e" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Metallic Alien Formline Gradients -->
+    <linearGradient id="primary-formline-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ede6ff" />
+      <stop offset="25%" stop-color="#d8c6ff" />
+      <stop offset="55%" stop-color="#9d5cff" />
+      <stop offset="85%" stop-color="#6b21a8" />
+      <stop offset="100%" stop-color="#3b0764" />
+    </linearGradient>
+
+    <linearGradient id="secondary-formline-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#042f2e" />
+      <stop offset="30%" stop-color="#0f766e" />
+      <stop offset="70%" stop-color="#14b8a6" />
+      <stop offset="100%" stop-color="#5ffbf1" />
+    </linearGradient>
+
+    <linearGradient id="cockpit-visor-glass" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#2a124a" stop-opacity="0.88" />
+      <stop offset="55%" stop-color="#140726" stop-opacity="0.94" />
+      <stop offset="100%" stop-color="#06020c" stop-opacity="0.98" />
+    </linearGradient>
+
+    <linearGradient id="canopy-glare" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22" />
+      <stop offset="40%" stop-color="#d8c6ff" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#5ffbf1" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Precision Glow Filters -->
+    <filter id="glow-cyan-sm" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="glow-cyan-lg" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="glow-purple-lg" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="16" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <style>
+    .primary-formline { fill: url(#primary-formline-grad); }
+    .secondary-formline { fill: url(#secondary-formline-grad); }
+    .cockpit-hull { fill: url(#cockpit-visor-glass); stroke: #9d5cff; stroke-width: 1.8; stroke-opacity: 0.65; }
+    .hud-line-major { stroke: #5ffbf1; stroke-width: 1.4; stroke-dasharray: 6 8; opacity: 0.7; }
+    .hud-line-minor { stroke: #9d5cff; stroke-width: 0.9; stroke-opacity: 0.45; }
+    .star-point { fill: #ede6ff; opacity: 0.65; }
+  </style>
+
+  <!-- ========================================================================
+       1. DEEP VOID BACKGROUND & AMBIENT COSMIC NEBULAE
+       ======================================================================== -->
+  <rect width="1200" height="630" rx="20" fill="#07030e" />
+  
+  <!-- Nebula Glow Fields -->
+  <circle cx="600" cy="270" r="380" fill="url(#nebula-purple-core)" />
+  <circle cx="600" cy="290" r="240" fill="url(#nebula-cyan-core)" />
+  <circle cx="180" cy="220" r="260" fill="url(#flank-nebula-left)" />
+  <circle cx="1020" cy="220" r="260" fill="url(#flank-nebula-right)" />
+
+  <!-- Background Starlight Spores -->
+  <circle cx="120" cy="110" r="1.5" class="star-point" />
+  <circle cx="180" cy="70" r="2" class="star-point" opacity="0.8" />
+  <circle cx="280" cy="95" r="1.2" class="star-point" />
+  <circle cx="340" cy="45" r="1.8" class="star-point" />
+  <circle cx="860" cy="65" r="1.4" class="star-point" />
+  <circle cx="940" cy="115" r="2" class="star-point" opacity="0.9" />
+  <circle cx="1060" cy="80" r="1.5" class="star-point" />
+  <circle cx="1110" cy="140" r="1.2" class="star-point" />
+  <circle cx="95" cy="480" r="1.5" class="star-point" />
+  <circle cx="1105" cy="490" r="1.8" class="star-point" />
+
+  <!-- ========================================================================
+       2. COCKPIT HUD RETICLE & NAVIGATION SYSTEM (Subtle Flight Avionics)
+       ======================================================================== -->
+  <!-- Outer Range Ring -->
+  <circle cx="600" cy="270" r="240" fill="none" class="hud-line-minor" />
+  <!-- Pitch Ladder Arc -->
+  <circle cx="600" cy="270" r="170" fill="none" class="hud-line-major" />
+  <!-- Inner Targeting Horizon -->
+  <circle cx="600" cy="270" r="70" fill="none" stroke="#5ffbf1" stroke-width="1.2" stroke-opacity="0.5" />
+  <circle cx="600" cy="270" r="28" fill="none" stroke="#9d5cff" stroke-width="1.2" stroke-opacity="0.6" stroke-dasharray="4 4" />
+
+  <!-- Horizon Guide Axes -->
+  <line x1="330" y1="270" x2="520" y2="270" class="hud-line-major" />
+  <line x1="680" y1="270" x2="870" y2="270" class="hud-line-major" />
+  <line x1="600" y1="90" x2="600" y2="190" class="hud-line-major" />
+  <line x1="600" y1="350" x2="600" y2="450" class="hud-line-major" />
+
+  <!-- Pitch Ladder Tick Notches -->
+  <line x1="570" y1="170" x2="630" y2="170" stroke="#5ffbf1" stroke-width="1.2" opacity="0.6" />
+  <line x1="580" y1="210" x2="620" y2="210" stroke="#5ffbf1" stroke-width="1" opacity="0.4" />
+  <line x1="580" y1="330" x2="620" y2="330" stroke="#5ffbf1" stroke-width="1" opacity="0.4" />
+  <line x1="570" y1="370" x2="630" y2="370" stroke="#5ffbf1" stroke-width="1.2" opacity="0.6" />
+
+  <!-- ========================================================================
+       3. ABSTRACT FORMLINE SPACESHIP COCKPIT ARCHITECTURE
+       ======================================================================== -->
+
+  <!-- Top Outer Canopy Arch (Primary Formline: Monumental Sweeping Arch with Tapering Flow) -->
+  <path class="primary-formline" filter="url(#glow-purple-lg)"
+        d="M 230 380
+           C 310 200, 440 95, 600 95
+           C 760 95, 890 200, 970 380
+           C 890 265, 770 145, 600 145
+           C 430 145, 310 265, 230 380 Z" />
+
+  <!-- Inner Visor Glass Shield (Glassmorphic Canopy Hull) -->
+  <path class="cockpit-hull"
+        d="M 310 360
+           C 370 220, 470 160, 600 160
+           C 730 160, 830 220, 890 360
+           C 810 425, 715 448, 600 448
+           C 485 448, 390 425, 310 360 Z" />
+
+  <!-- Canopy Windshield Diagonal Glass Glare (Atmospheric Cockpit Depth) -->
+  <path fill="url(#canopy-glare)"
+        d="M 430 155
+           L 520 155
+           L 410 440
+           L 320 440 Z" />
+
+  <!-- ========================================================================
+       4. FORMLINE INSTRUMENTATION CORE (Central Ovoid & Lateral Flanks)
+       ======================================================================== -->
+
+  <!-- Central Navigation Ovoid (Primary Formline Calligraphic Frame) -->
+  <path class="primary-formline"
+        d="M 460 270
+           C 460 185, 515 160, 600 160
+           C 685 160, 740 185, 740 270
+           C 740 345, 685 372, 600 372
+           C 515 372, 460 345, 460 270 Z
+           M 498 270
+           C 498 322, 536 346, 600 346
+           C 664 346, 702 322, 702 270
+           C 702 215, 664 188, 600 188
+           C 536 188, 498 215, 498 270 Z" />
+
+  <!-- Inner Bio-Cyan Ovoid Eye / Artificial Horizon (Secondary Formline) -->
+  <path class="secondary-formline" filter="url(#glow-cyan-sm)"
+        d="M 526 270
+           C 526 232, 552 214, 600 214
+           C 648 214, 674 232, 674 270
+           C 674 302, 648 322, 600 322
+           C 552 322, 526 302, 526 270 Z
+           M 556 270
+           C 556 286, 574 300, 600 300
+           C 626 300, 644 286, 644 270
+           C 644 252, 626 238, 600 238
+           C 574 238, 556 252, 556 270 Z" />
+
+  <!-- Left Lateral Wing U-Form (Flanking Throttle Console) -->
+  <path class="primary-formline"
+        d="M 250 375
+           C 275 305, 335 265, 405 265
+           C 418 285, 420 305, 398 316
+           C 355 316, 320 340, 300 380
+           C 330 372, 368 375, 388 392
+           C 350 420, 290 416, 250 375 Z" />
+
+  <!-- Right Lateral Wing U-Form (Flanking Telemetry Console) -->
+  <path class="primary-formline"
+        d="M 950 375
+           C 925 305, 865 265, 795 265
+           C 782 285, 780 305, 802 316
+           C 845 316, 880 340, 900 380
+           C 870 372, 832 375, 812 392
+           C 850 420, 910 416, 950 375 Z" />
+
+  <!-- Lower Instrument Console Cradle (Secondary Formline Tapered Bar) -->
+  <path class="secondary-formline"
+        d="M 390 426
+           C 460 458, 530 470, 600 470
+           C 670 470, 740 458, 810 426
+           C 755 450, 680 458, 600 458
+           C 520 458, 445 450, 390 426 Z" />
+
+  <!-- Calligraphic S-Form Micro-Avionics Accents -->
+  <path fill="#5ffbf1" opacity="0.85" filter="url(#glow-cyan-sm)"
+        d="M 430 195
+           C 415 178, 390 186, 380 200
+           C 392 194, 408 195, 420 206
+           C 426 212, 435 206, 430 195 Z" />
+
+  <path fill="#5ffbf1" opacity="0.85" filter="url(#glow-cyan-sm)"
+        d="M 770 195
+           C 785 178, 810 186, 820 200
+           C 808 194, 792 195, 780 206
+           C 774 212, 765 206, 770 195 Z" />
+
+  <!-- Core Target Flight Vector Node -->
+  <circle cx="600" cy="270" r="5" fill="#5ffbf1" filter="url(#glow-cyan-lg)" />
+  <circle cx="600" cy="270" r="2.2" fill="#ede6ff" />
+  <circle cx="560" cy="270" r="2.5" fill="#5ffbf1" opacity="0.8" />
+  <circle cx="640" cy="270" r="2.5" fill="#5ffbf1" opacity="0.8" />
+
+  <!-- ========================================================================
+       5. COCKPIT AVIONICS STATUS DISPLAY & EMBEDDED TYPOGRAPHY
+       ======================================================================== -->
+
+  <!-- Left Telemetry Readout -->
+  <text x="210" y="558" font-family="'Cascadia Code', 'SFMono-Regular', Consolas, monospace" font-size="11" letter-spacing="0.25em" fill="#a996d6" opacity="0.75">
+    // AIR-GAPPED HARDWARE FOUNDRY
+  </text>
+  <line x1="210" y1="570" x2="380" y2="570" stroke="#9d5cff" stroke-width="0.8" opacity="0.4" />
+
+  <!-- Center Master Title: VANGUARD FOUNDRY -->
+  <text x="600" y="546" text-anchor="middle" font-family="'Cascadia Code', 'SFMono-Regular', Consolas, monospace" font-size="19" font-weight="700" letter-spacing="0.40em" fill="#ede6ff">
+    V A N G U A R D   F O U N D R Y
+  </text>
+
+  <!-- Center Sub-Title: ARTIFACT COMPILER -->
+  <text x="600" y="578" text-anchor="middle" font-family="'Cascadia Code', 'SFMono-Regular', Consolas, monospace" font-size="11.5" font-weight="600" letter-spacing="0.32em" fill="#5ffbf1" opacity="0.92">
+    A R T I F A C T   C O M P I L E R
+  </text>
+
+  <!-- Right Telemetry Readout -->
+  <text x="990" y="558" text-anchor="end" font-family="'Cascadia Code', 'SFMono-Regular', Consolas, monospace" font-size="11" letter-spacing="0.25em" fill="#5ffbf1" opacity="0.75">
+    // ZERO CONTEXT DRIFT //
+  </text>
+  <line x1="820" y1="570" x2="990" y2="570" stroke="#5ffbf1" stroke-width="0.8" opacity="0.4" />
+</svg>

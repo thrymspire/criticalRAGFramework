@@ -1,0 +1,34 @@
+{
+  "corpus_name": "Critical Path Master Ontology",
+  "version": "1.0",
+  "nodes": [
+    {
+      "id": "CP-NODE-001",
+      "name": "Project Ingestion & Normalization",
+      "phase": "Phase 1: Ingestion",
+      "target_distro": "criticalpath-pipeline-v1.0",
+      "description": "Extracts raw project Gantt, WBS, and dependency schedules and normalizes them into standard topological DAG nodes."
+    },
+    {
+      "id": "CP-NODE-002",
+      "name": "Ontology & Graph Persistence",
+      "phase": "Phase 2: Storage",
+      "target_distro": "criticalpath-store-v1.0",
+      "description": "Stores graph structures, relational edges, entity embeddings, and memory snapshots for high-speed retrieval."
+    },
+    {
+      "id": "CP-NODE-003",
+      "name": "Evaluation & Metric Verification",
+      "phase": "Phase 3: Evaluation",
+      "target_distro": "criticalpath-eval-v1.0",
+      "description": "Runs scoring algorithms, slack analysis, float calculations, and model accuracy benchmarks against ground truth."
+    },
+    {
+      "id": "CP-NODE-004",
+      "name": "Autonomous Execution Harness",
+      "phase": "Phase 4: Harness",
+      "target_distro": "criticalpath-harness-v1.0",
+      "description": "Hosts the ReAct agent loops, project workspace mounts, and secure API key vault without host contamination."
+    }
+  ]
+}

@@ -1,0 +1,1951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Critical RAG × Vanguard Foundry // Sovereign Cockpit & Artifact Foundry</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ==========================================================================
+       VANGUARD × CRITICAL RAG INTERLEAVED COMPONENT STYLES
+       ========================================================================== */
+    /* Mode Switcher Pills */
+    .mode-pill-container {
+      display: inline-flex;
+      border-radius: var(--radius-pill);
+      background: rgba(10, 5, 18, 0.75);
+      border: 1px solid var(--panel-border);
+      padding: 3px;
+      gap: 4px;
+    }
+    .mode-pill-btn {
+      background: transparent;
+      border: none;
+      color: var(--ink-dim);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .mode-pill-btn.active {
+      background: var(--signal);
+      color: var(--ink);
+      box-shadow: 0 0 14px var(--signal-bright);
+    }
+    .mode-pill-btn:hover:not(.active) {
+      color: var(--ink);
+      background: rgba(157, 92, 255, 0.15);
+    }
+
+    /* Vanguard Watermark Drift & CanaryAnchor Tracker */
+    .watermark-tracker-panel {
+      background: rgba(18, 8, 32, 0.75);
+      border: 1px solid rgba(157, 92, 255, 0.35);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 14px;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .watermark-tracker-panel:hover {
+      border-color: rgba(95, 251, 241, 0.5);
+      box-shadow: 0 0 16px rgba(95, 251, 241, 0.15);
+    }
+    .watermark-tracker-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tracker-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tracker-icon {
+      color: var(--bio);
+      font-size: 1rem;
+    }
+    .tracker-main-label {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      color: var(--ink);
+      text-transform: uppercase;
+    }
+    .tracker-status-pill {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 2px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(95, 251, 241, 0.4);
+      background: rgba(95, 251, 241, 0.08);
+      color: var(--bio);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      transition: all 0.3s ease;
+    }
+    .drift-meter-bar {
+      width: 100%;
+      height: 10px;
+      background: rgba(10, 5, 18, 0.85);
+      border: 1px solid rgba(157, 92, 255, 0.3);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      position: relative;
+    }
+    .drift-meter-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--bio), var(--signal-bright));
+      border-radius: var(--radius-pill);
+      transition: width 0.5s ease, background 0.5s ease;
+    }
+    .anchor-tokens-dock {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding-top: 6px;
+      border-top: 1px solid rgba(157, 92, 255, 0.15);
+    }
+    .anchor-lead-tag {
+      color: var(--ink-dim);
+      font-weight: 700;
+      font-size: 0.68rem;
+    }
+    .anchor-pill-cluster {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .anchor-pill {
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(157, 92, 255, 0.35);
+      background: rgba(157, 92, 255, 0.1);
+      color: var(--spore);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .anchor-pill.active {
+      border-color: rgba(95, 251, 241, 0.45);
+      background: rgba(95, 251, 241, 0.14);
+      color: var(--bio);
+    }
+    .anchor-pill.decaying {
+      border-color: rgba(255, 184, 108, 0.45);
+      background: rgba(255, 184, 108, 0.14);
+      color: #ffb86c;
+    }
+    .anchor-pill.lost {
+      border-color: rgba(255, 107, 129, 0.45);
+      background: rgba(255, 107, 129, 0.14);
+      color: var(--warn);
+      text-decoration: line-through;
+    }
+
+    /* Grounded Chunks Drawer */
+    .chunks-drawer {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+    .chunk-chip {
+      background: rgba(157, 92, 255, 0.14);
+      border: 1px solid rgba(157, 92, 255, 0.35);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--spore);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .chunk-chip:hover {
+      border-color: var(--bio);
+      background: rgba(95, 251, 241, 0.12);
+      color: var(--ink);
+    }
+
+    /* Verification Summary Box */
+    .verification-summary-box {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      background: rgba(10, 5, 18, 0.85);
+      border-left: 4px solid var(--bio);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: var(--ink);
+      border: 1px solid rgba(95, 251, 241, 0.25);
+      border-left: 4px solid var(--bio);
+    }
+    .verification-summary-box.gap-warning {
+      border-color: rgba(255, 107, 129, 0.4);
+      border-left: 4px solid var(--warn);
+    }
+
+    /* Vanguard Floating Vessel Animation */
+    @keyframes shipHover {
+      0% {
+        transform: translateY(0px) rotate(0deg);
+        box-shadow: 0 14px 34px -4px rgba(10, 5, 18, 0.85),
+                    0 0 24px rgba(157, 92, 255, 0.25),
+                    0 6px 16px rgba(95, 251, 241, 0.15);
+        filter: drop-shadow(0 6px 14px rgba(10, 5, 18, 0.75));
+      }
+      50% {
+        transform: translateY(-10px) rotate(0.18deg);
+        box-shadow: 0 28px 64px -8px rgba(10, 5, 18, 0.95),
+                    0 0 44px 6px rgba(157, 92, 255, 0.45),
+                    0 18px 36px -4px rgba(95, 251, 241, 0.32);
+        filter: drop-shadow(0 18px 28px rgba(95, 251, 241, 0.24));
+      }
+      100% {
+        transform: translateY(0px) rotate(0deg);
+        box-shadow: 0 14px 34px -4px rgba(10, 5, 18, 0.85),
+                    0 0 24px rgba(157, 92, 255, 0.25),
+                    0 6px 16px rgba(95, 251, 241, 0.15);
+        filter: drop-shadow(0 6px 14px rgba(10, 5, 18, 0.75));
+      }
+    }
+
+    /* Live Alien Artifact Preview Deck */
+    .artifact-vessel-deck {
+      margin-top: 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .artifact-vessel-card {
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-cut);
+      padding: 28px;
+      animation: shipHover 7s ease-in-out infinite;
+      transition: border-color 0.3s ease;
+      position: relative;
+    }
+    .artifact-vessel-card:hover {
+      border-color: rgba(95, 251, 241, 0.7);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .artifact-vessel-card { animation: none !important; }
+    }
+
+    /* Synthesis Confidence Meter Card */
+    .confidence-meter-card {
+      background: rgba(24, 12, 42, 0.85);
+      border: 1px solid rgba(95, 251, 241, 0.32);
+      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 4px 18px rgba(10, 5, 18, 0.6), 0 0 14px rgba(95, 251, 241, 0.12);
+    }
+    .conf-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .conf-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .conf-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 0.86rem;
+      letter-spacing: 0.08em;
+      color: var(--ink);
+      text-transform: uppercase;
+    }
+    .conf-score-pill {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: var(--radius-pill);
+      background: rgba(95, 251, 241, 0.14);
+      border: 1px solid rgba(95, 251, 241, 0.45);
+      color: var(--bio);
+    }
+    .conf-track {
+      width: 100%;
+      height: 11px;
+      background: rgba(10, 5, 18, 0.9);
+      border: 1px solid rgba(95, 251, 241, 0.3);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      position: relative;
+    }
+    .conf-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--signal), var(--bio));
+      border-radius: var(--radius-pill);
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .conf-breakdown-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(157, 92, 255, 0.15);
+    }
+    .conf-breakdown-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .cb-label {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--ink-dim);
+      letter-spacing: 0.05em;
+    }
+    .cb-val {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--spore);
+    }
+
+    /* Rendered Sections & Pods */
+    .rendered-alien-panel {
+      background: var(--panel);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--panel-border);
+      clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 6px 20px -2px rgba(10, 5, 18, 0.7), 0 0 14px rgba(157, 92, 255, 0.18);
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+    .rendered-alien-panel:hover {
+      transform: translateY(-3px);
+      border-color: rgba(95, 251, 241, 0.65);
+    }
+    .rendered-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(157, 92, 255, 0.2);
+      padding-bottom: 8px;
+    }
+    .rendered-panel-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 1.05rem;
+      color: var(--ink);
+    }
+
+    /* Checkpod Items */
+    .check-list { display: flex; flex-direction: column; gap: 10px; }
+    .check-row { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; user-select: none; }
+    .check-input { position: absolute; opacity: 0; width: 22px; height: 22px; }
+    .check-pod {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid var(--signal); background: rgba(157, 92, 255, 0.08);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+    .check-glyph { opacity: 0; color: var(--void); font-size: 12px; font-weight: 900; }
+    .check-input:checked + .check-pod { background: var(--signal); border-color: var(--bio); box-shadow: 0 0 8px var(--bio); }
+    .check-input:checked + .check-pod .check-glyph { opacity: 1; }
+    .check-input:checked ~ .check-text { color: var(--ink-dim); text-decoration: line-through; text-decoration-color: var(--signal); }
+
+    /* Code Blocks */
+    .code-box {
+      background: #050208; border: 1px solid var(--panel-border); border-left: 3px solid var(--bio);
+      padding: 12px 14px; margin: 12px 0; font-family: var(--font-mono); color: var(--spore);
+      display: flex; justify-content: space-between; align-items: flex-start;
+      border-radius: 4px;
+    }
+    .code-content { margin: 0; font-size: 0.85rem; white-space: pre-wrap; word-break: break-all; }
+
+    /* Action Toolbar */
+    .artifact-toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 14px 18px;
+      background: rgba(10, 5, 18, 0.85);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+    }
+    .btn-save-artifact {
+      background: linear-gradient(135deg, var(--signal), #7c3aed);
+      border: 1px solid var(--signal-bright);
+      color: var(--ink);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 9px 20px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      box-shadow: 0 0 16px rgba(157, 92, 255, 0.35);
+    }
+    .btn-save-artifact:hover {
+      background: linear-gradient(135deg, var(--signal-bright), #9333ea);
+      box-shadow: 0 0 24px rgba(157, 92, 255, 0.6);
+      transform: translateY(-2px);
+    }
+    /* General Chat Styling */
+    .chat-deck {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .chat-transcript-box {
+      height: 480px;
+      overflow-y: auto;
+      background: rgba(10, 5, 18, 0.85);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scroll-behavior: smooth;
+    }
+    .chat-msg {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 88%;
+      animation: fadeIn 0.25s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .chat-msg.user {
+      align-self: flex-end;
+    }
+    .chat-msg.assistant {
+      align-self: flex-start;
+    }
+    .chat-msg-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--ink-dim);
+    }
+    .chat-msg.user .chat-msg-header {
+      justify-content: flex-end;
+    }
+    .chat-msg-bubble {
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .chat-msg.user .chat-msg-bubble {
+      background: rgba(157, 92, 255, 0.22);
+      border: 1px solid rgba(157, 92, 255, 0.5);
+      color: var(--ink);
+      border-bottom-right-radius: 2px;
+    }
+    .chat-msg.assistant .chat-msg-bubble {
+      background: rgba(24, 12, 42, 0.85);
+      border: 1px solid rgba(95, 251, 241, 0.35);
+      color: var(--spore);
+      border-bottom-left-radius: 2px;
+      border-left: 3px solid var(--bio);
+    }
+    .chat-msg-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 4px;
+    }
+    .chat-compile-btn {
+      background: rgba(95, 251, 241, 0.12);
+      border: 1px solid rgba(95, 251, 241, 0.4);
+      color: var(--bio);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .chat-compile-btn:hover {
+      background: rgba(95, 251, 241, 0.25);
+      border-color: var(--bio);
+      transform: translateY(-1px);
+    }
+    .chat-input-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chat-controls-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .chat-toggle-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .typing-cursor {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: var(--bio);
+      margin-left: 4px;
+      vertical-align: middle;
+      animation: blinkCursor 0.8s infinite;
+    }
+    @keyframes blinkCursor {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Ambient Spacecraft Nebulae & Blobs -->
+  <div class="blob blob-purple"></div>
+  <div class="blob blob-cyan"></div>
+
+  <div class="container" style="max-width: 1340px; margin: 0 auto; padding: 20px;">
+    <!-- Top Cockpit Command Header -->
+    <header class="cockpit-header">
+      <div class="brand">
+        <img src="logo.svg" alt="Vanguard Formline Insignia" style="width: 38px; height: 38px; filter: drop-shadow(0 0 8px var(--signal));">
+        <div>
+          <h1 style="font-size: 1.25rem; font-family: var(--font-display); letter-spacing: 0.08em; background: linear-gradient(90deg, var(--signal-bright), var(--bio)); -webkit-background-clip: text; background-clip: text; color: transparent;">
+            CRITICAL RAG × VANGUARD FOUNDRY
+          </h1>
+          <div class="subtitle" style="font-size: 0.72rem;">Sovereign Local AI Cockpit & Unified Alien Artifact Compiler</div>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <!-- Dynamic Agent Persona Dropdown -->
+        <div class="agent-select-group">
+          <label for="agentSelect" style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-dim); text-transform: uppercase;">
+            Active Agent
+          </label>
+          <select id="agentSelect" class="agent-select" onchange="switchAgent(this.value)">
+            <option value="engineer">ENGINEER</option>
+            <option value="framework" selected>FRAMEWORK</option>
+            <option value="mechanic">MECHANIC</option>
+            <option value="analyst">ANALYST</option>
+            <option value="debug">DEBUG</option>
+          </select>
+        </div>
+
+        <!-- Mode Switcher -->
+        <div class="mode-pill-container">
+          <button class="mode-pill-btn active" id="btnModeAgent" onclick="setAppMode('agent')">⚡ ReAct RAG</button>
+          <button class="mode-pill-btn" id="btnModeChat" onclick="setAppMode('chat')">💬 General Chat</button>
+          <button class="mode-pill-btn" id="btnModeTokens" onclick="setAppMode('tokens')">📊 Token Physics</button>
+          <button class="mode-pill-btn" id="btnModeWrap" onclick="setAppMode('wrap')">📝 Direct Wrap</button>
+        </div>
+
+        <!-- Cluster Bridge Status -->
+        <div class="status-pill">
+          <div class="pulse-dot"></div>
+          <span id="bridgeStatus">PORT 8090 ONLINE</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main 2-Column Cockpit Grid -->
+    <main class="dashboard-grid" style="display: grid; grid-template-columns: 460px 1fr; gap: 24px; margin-top: 20px;">
+      
+      <!-- =====================================================================
+           LEFT COLUMN: THE SPOKEWHEEL & VANGUARD DRIFT TELEMETRY
+           ===================================================================== -->
+      <section style="display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- The Spokewheel Canvas Panel -->
+        <div class="glass-panel" style="display: flex; flex-direction: column; align-items: center; padding: 22px;">
+          <div class="panel-title" style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h2>Entropy Orbit & Radial Spokes</h2>
+            <span id="entropyBadge" style="color: var(--bio); font-family: var(--font-mono); font-size: 0.74rem; font-weight: 700;">
+              CERTAINTY (LOW H)
+            </span>
+          </div>
+
+          <!-- Canvas Stage for circle.js -->
+          <div style="position: relative; width: 100%; display: flex; justify-content: center; padding: 6px 0;">
+            <canvas id="entropyCanvas" width="380" height="380"></canvas>
+          </div>
+
+          <!-- Real-Time Token Telemetry Metrics Under Spokewheel -->
+          <div style="width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+            <div class="metric-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+              <div class="metric-card bio" style="padding: 8px 10px;">
+                <div class="metric-label" style="font-size: 0.64rem;">Step / Token</div>
+                <div class="metric-val" id="metricToken" style="font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">--</div>
+              </div>
+              <div class="metric-card signal" style="padding: 8px 10px;">
+                <div class="metric-label" style="font-size: 0.64rem;">Top-1 Prob</div>
+                <div class="metric-val" id="metricProb" style="font-size: 0.82rem;">--</div>
+              </div>
+              <div class="metric-card warn" style="padding: 8px 10px;">
+                <div class="metric-label" style="font-size: 0.64rem;">Shannon (H)</div>
+                <div class="metric-val" id="metricEntropy" style="font-size: 0.82rem;">--</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vanguard Watermark & CanaryAnchor Telemetry Deck -->
+        <div class="watermark-tracker-panel">
+          <div class="watermark-tracker-header">
+            <div class="tracker-title-row">
+              <span class="tracker-icon">◈</span>
+              <div>
+                <div class="tracker-main-label">CanaryAnchor & Context Drift</div>
+                <div class="tracker-sub-label">Vanguard Prompt Retention Formula</div>
+              </div>
+            </div>
+            <span class="tracker-status-pill" id="driftStatusPill">ANCHOR LOCKED (100%)</span>
+          </div>
+
+          <!-- Animated Context Fidelity Bar -->
+          <div class="drift-meter-bar">
+            <div class="drift-meter-fill" id="driftMeterFill" style="width: 100%;"></div>
+          </div>
+
+          <!-- Telemetry Details Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-family: var(--font-mono); font-size: 0.72rem; padding: 4px 0;">
+            <div>
+              <span style="color: var(--ink-dim); font-size: 0.62rem; display: block;">RETENTION</span>
+              <span id="watermarkRetentionVal" style="color: var(--bio); font-weight: 700;">100%</span>
+            </div>
+            <div>
+              <span style="color: var(--ink-dim); font-size: 0.62rem; display: block;">SESSION DRIFT</span>
+              <span id="driftOffsetVal" style="color: var(--spore); font-weight: 700;">0.0%</span>
+            </div>
+            <div>
+              <span style="color: var(--ink-dim); font-size: 0.62rem; display: block;">CONTEXT BUDGET</span>
+              <span id="contextBudgetVal" style="color: var(--ink); font-weight: 700;">0 / 8192 (0%)</span>
+            </div>
+          </div>
+
+          <!-- Live CanaryAnchor Cluster -->
+          <div class="anchor-tokens-dock">
+            <span class="anchor-lead-tag">ANCHORS:</span>
+            <span class="anchor-empty-notice" id="anchorEmptyNotice">Awaiting prompt directive...</span>
+            <div class="anchor-pill-cluster" id="anchorPillCluster"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- =====================================================================
+           RIGHT COLUMN: DIRECTIVE DECK, RAG DRAWER & RUNNING OUTPUT
+           ===================================================================== -->
+      <section style="display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- Spacecraft Directive Deck -->
+        <div id="directiveDeckPanel" class="glass-panel" style="padding: 22px; display: flex; flex-direction: column; gap: 14px;">
+          <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 id="directiveTitle">Autonomous Agent Directive Deck</h2>
+            <span id="directiveBadge" style="color: var(--bio); font-family: var(--font-mono); font-size: 0.74rem;">GROUNDED RAG EXECUTION</span>
+          </div>
+
+          <!-- Quick Preset Chips -->
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn-copy" style="position: static;" onclick="loadPrompt('Explain the 4-tier Critical Path cluster and its storage guardrails.')">⚡ Cluster Architecture</button>
+            <button class="btn-copy" style="position: static;" onclick="loadPrompt('Explain the Vanguard CanaryAnchor and context drift telemetry equation.')">🧬 Vanguard Drift Telemetry</button>
+            <button class="btn-copy" style="position: static;" onclick="loadPrompt('What are the ComfyUI memory guardrails on the Radeon 780M?')">🛡️ ComfyUI Guardrails</button>
+            <button class="btn-copy" style="position: static;" onclick="loadPrompt('Audit canonical chunk schema compliance and hardware arbitration.')">🔍 Framework Self-Audit</button>
+          </div>
+
+          <!-- Prompt Tray -->
+          <form class="prompt-tray" onsubmit="startExecution(event)" style="display: flex; flex-direction: column; gap: 10px;">
+            <textarea
+              id="promptInput"
+              class="prompt-textarea"
+              style="width: 100%; min-height: 95px; background: rgba(10, 5, 18, 0.85); border: 1px solid var(--panel-border); border-radius: 8px; color: var(--ink); font-family: var(--font-body); padding: 12px; font-size: 0.9rem; resize: vertical;"
+              placeholder="Enter directive for the ReAct agent (or paste Markdown to compile into an Alien Artifact)..."
+              onkeydown="handleKeyDown(event)"
+            >Explain the Vanguard CanaryAnchor and context drift telemetry equation.</textarea>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-dim); display: flex; align-items: center; gap: 14px;">
+                <span>Target: <strong style="color: var(--bio);">llama-server (Vulkan 8080)</strong></span>
+                <label class="chat-toggle-label">
+                  <input type="checkbox" id="directiveNoAgentToggle" onchange="toggleDirectMode(this.checked)" style="accent-color: var(--signal-bright); cursor: pointer;">
+                  <span style="color: var(--signal-bright); font-weight: 600;">⚡ Direct Mode (No Persona)</span>
+                </label>
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <button type="button" id="btnCompileNow" onclick="compileDirectToArtifact()" class="btn-copy" style="position: static; border-color: var(--bio); color: var(--bio); padding: 8px 16px;">
+                  📝 Compile Artifact Now
+                </button>
+                <button type="submit" id="btnLaunch" class="btn-launch" style="padding: 8px 24px; font-weight: 700; font-family: var(--font-mono); background: linear-gradient(135deg, var(--signal), var(--signal-bright)); border: none; border-radius: var(--radius-pill); color: var(--void); cursor: pointer;">
+                  Engage Agent
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Grounded Chunks Drawer -->
+          <div id="groundedChunksSection" style="margin-top: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-dim); text-transform: uppercase;">
+                Grounded Provenance Chunks (3-Tier Hierarchical RAG)
+              </span>
+              <span id="chunkCount" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--bio);">
+                Awaiting RAG probe...
+              </span>
+            </div>
+            <div class="chunks-drawer" id="chunksDrawer">
+              <!-- Dynamically populated chips -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Grounded Execution Viewport -->
+        <div id="runningViewportPanel" class="glass-panel" style="padding: 22px; display: flex; flex-direction: column; gap: 12px;">
+          <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Live Agent Execution Output</h2>
+            <span id="genStatus" style="color: var(--ink-dim); font-family: var(--font-mono); font-size: 0.74rem;">IDLE</span>
+          </div>
+
+          <div class="running-text-box" id="runningTextBox" style="min-height: 140px; background: rgba(10, 5, 18, 0.75); border: 1px solid rgba(157, 92, 255, 0.25); border-radius: 8px; padding: 14px; font-size: 0.9rem; line-height: 1.6; color: var(--ink); white-space: pre-wrap;">
+Ready to engage. Select an agent persona above, enter a directive, and click "Engage Agent" to run the live ReAct loop with hierarchical RAG grounding, CanaryAnchor tracking, and real-time Alien Artifact synthesis.
+          </div>
+
+          <!-- Phase 4 Verification Summary Block -->
+          <div id="verificationSummaryContainer" style="display: none;">
+            <div class="verification-summary-box" id="verificationSummaryBox">
+              <!-- Dynamically populated at stream completion -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Unified Multi-Turn Sovereign Chat Deck -->
+        <div id="chatDeck" class="glass-panel chat-deck" style="display: none; padding: 22px;">
+          <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Sovereign Multi-Turn Dialogue</h2>
+            <span id="chatGroundingBadge" style="color: var(--bio); font-family: var(--font-mono); font-size: 0.74rem; font-weight: 700;">
+              HIERARCHICAL RAG ACTIVE
+            </span>
+          </div>
+
+          <!-- Chat Transcript Box -->
+          <div class="chat-transcript-box" id="chatTranscriptBox">
+            <div class="chat-msg assistant">
+              <div class="chat-msg-header">
+                <span style="color: var(--bio); font-weight: 700;">◈ SYSTEM / FRAMEWORK</span>
+                <span>ONLINE</span>
+              </div>
+              <div class="chat-msg-bubble">Welcome to the sovereign dialogue console. I am connected to the 3-tier hierarchical RAG index and Vulkan LLM. What would you like to explore or construct today?</div>
+            </div>
+          </div>
+
+          <!-- Grounded Chunks Drawer for Chat -->
+          <div id="chatChunksDrawerSection" style="margin-top: 2px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-dim); text-transform: uppercase;">
+                Active Turn Provenance Chunks
+              </span>
+              <span id="chatChunkCount" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--bio);">
+                Awaiting turn probe...
+              </span>
+            </div>
+            <div class="chunks-drawer" id="chatChunksDrawer"></div>
+          </div>
+
+          <!-- Chat Input Bar -->
+          <form class="chat-input-bar" onsubmit="sendChatMessage(event)">
+            <textarea
+              id="chatInputText"
+              class="prompt-textarea"
+              style="width: 100%; min-height: 80px; background: rgba(10, 5, 18, 0.85); border: 1px solid var(--panel-border); border-radius: 8px; color: var(--ink); font-family: var(--font-body); padding: 12px; font-size: 0.9rem; resize: vertical;"
+              placeholder="Send message to sovereign agent (Enter to send, Shift+Enter for newline)..."
+              onkeydown="handleChatKeyDown(event)"
+            ></textarea>
+            
+            <div class="chat-controls-row">
+              <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                <label class="chat-toggle-label">
+                  <input type="checkbox" id="chatRagToggle" checked style="accent-color: var(--bio); cursor: pointer;" onchange="toggleChatRag(this.checked)">
+                  <span>3-Tier RAG Grounding</span>
+                </label>
+                <label class="chat-toggle-label">
+                  <input type="checkbox" id="chatNoAgentToggle" style="accent-color: var(--signal-bright); cursor: pointer;" onchange="toggleDirectMode(this.checked)">
+                  <span style="color: var(--signal-bright); font-weight: 600;">⚡ Direct Mode (No Persona)</span>
+                </label>
+                <button type="button" id="btnAbortThinking" class="btn-copy" style="position: static; font-size: 0.72rem; padding: 4px 11px; border-color: var(--warn); color: var(--warn);" onclick="clearChatThinking()" title="Clear thinking state, abort hanging response, and re-enable input">
+                  🛑 Clear Thinking / Abort
+                </button>
+                <button type="button" class="btn-copy" style="position: static; font-size: 0.72rem; padding: 4px 10px;" onclick="clearChatHistory()">
+                  🧹 Clear Chat
+                </button>
+              </div>
+
+              <div style="display: flex; gap: 10px;">
+                <button type="submit" id="btnSendChat" class="btn-launch" style="padding: 8px 24px; font-weight: 700; font-family: var(--font-mono); background: linear-gradient(135deg, var(--bio), var(--signal-bright)); border: none; border-radius: var(--radius-pill); color: var(--void); cursor: pointer;">
+                  Send Directive ↵
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Candidate Logprob Pool & Telemetry Snippet -->
+        <div class="glass-panel" style="padding: 22px; display: flex; flex-direction: column; gap: 12px;">
+          <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Active Logprob Candidate Pool</h2>
+            <span style="color: var(--signal-bright); font-family: var(--font-mono); font-size: 0.74rem;">TOP 5 RADIAL SPOKES</span>
+          </div>
+
+          <table class="candidates-table" style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.78rem;">
+            <thead>
+              <tr style="border-bottom: 1px solid rgba(157, 92, 255, 0.2); text-align: left; color: var(--ink-dim);">
+                <th style="padding: 6px;">Candidate Token</th>
+                <th style="padding: 6px;">Probability</th>
+                <th style="padding: 6px;">Distribution</th>
+              </tr>
+            </thead>
+            <tbody id="candidatesTableBody">
+              <tr>
+                <td colspan="3" style="color: var(--ink-dim); text-align: center; padding: 16px 0;">
+                  Awaiting generation stream...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- =========================================================================
+         FULL-WIDTH LOWER SECTION: THE LIVE ALIEN ARTIFACT VESSEL PREVIEW
+         ========================================================================= -->
+    <section class="artifact-vessel-deck" id="artifactVesselDeck">
+      
+      <div class="artifact-vessel-card" id="artifactVesselCard">
+        
+        <!-- Vessel Card Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="color: var(--bio); font-size: 1.2rem;">✦</span>
+              <h2 id="artifactVesselTitle" style="font-family: var(--font-display); font-size: 1.35rem; font-weight: 900; letter-spacing: 0.08em; background: linear-gradient(90deg, var(--signal-bright), var(--bio)); -webkit-background-clip: text; background-clip: text; color: transparent; text-transform: uppercase;">
+                LIVE ALIEN ARTIFACT PREVIEW
+              </h2>
+            </div>
+            <div id="artifactMetaLabel" style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-dim); margin-top: 4px;">
+              // ALIEN ARTIFACT VESSEL // STANDALONE COMPILER DECK // READY
+            </div>
+          </div>
+
+          <!-- Persistence Toolbar -->
+          <div class="artifact-toolbar">
+            <button class="btn-save-artifact" id="btnSaveToDesktop" onclick="saveArtifactToDesktop()">
+              <span>🧬</span> Save to Alien Artifacts Folder
+            </button>
+            <button class="btn-copy" style="position: static;" onclick="copyArtifactHtml()">
+              📋 Copy Full HTML
+            </button>
+            <button class="btn-copy" style="position: static;" onclick="openArtifactInNewTab()">
+              ↗ Open in New Tab
+            </button>
+            <span id="saveStatusIndicator" style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--spore);"></span>
+          </div>
+        </div>
+
+        <!-- Vanguard Synthesis Confidence & Context Integrity Card -->
+        <div class="confidence-meter-card">
+          <div class="conf-header-row">
+            <div class="conf-title-group">
+              <span style="color: var(--bio); font-size: 1rem;">✧</span>
+              <span class="conf-title">SYNTHESIS CONFIDENCE & CONTEXT FIDELITY</span>
+              <span class="conf-score-pill" id="vesselConfScorePill">95% // HIGH INTEGRITY</span>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-dim);">
+              SESSION DRIFT: <span id="vesselDriftStat" style="color: var(--bio); font-weight: 700;">0.0%</span>
+            </div>
+          </div>
+          
+          <div class="conf-track">
+            <div class="conf-fill" id="vesselConfFill" style="width: 95%;"></div>
+          </div>
+
+          <div class="conf-breakdown-row">
+            <div class="conf-breakdown-item">
+              <span class="cb-label">WATERMARK RETENTION</span>
+              <span class="cb-val" id="vesselRetentionStat">100% (Anchors Preserved)</span>
+            </div>
+            <div class="conf-breakdown-item">
+              <span class="cb-label">PROMPT CACHE (KV)</span>
+              <span class="cb-val" style="color: var(--bio);">⚡ ACTIVE (Vulkan Zero-Latency)</span>
+            </div>
+            <div class="conf-breakdown-item">
+              <span class="cb-label">STRUCTURAL DENSITY</span>
+              <span class="cb-val" id="vesselDensityStat">Verified (Sections + Pods)</span>
+            </div>
+            <div class="conf-breakdown-item">
+              <span class="cb-label">HALLUCINATION RISK</span>
+              <span class="cb-val" id="vesselHallucinationStat" style="color: var(--bio);">✓ ZERO DRIFT DETECTED</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Rendered HTML Sections (Glassmorphic Panels + Pods + Code Blocks) -->
+        <div id="artifactRenderedSections">
+          <!-- Dynamically populated by renderArtifactPreview() -->
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="circle.js"></script>
+  <script>
+    /* ==========================================================================
+       VANGUARD × CRITICAL RAG UNIFIED SINGLE-PAGE RUNTIME
+       ========================================================================== */
+    let appMode = 'agent'; // 'agent', 'tokens', or 'wrap'
+    let circleViz = null;
+    let activeEventSource = null;
+    let currentPrompt = "";
+    let currentVerification = null;
+    let activeChunks = [];
+    let lastCompiledMarkdown = "";
+    let lastCompiledTopic = "system_artifact";
+
+    /* Stop Words for CanaryAnchor Extraction */
+    const STOP_WORDS = new Set([
+      "a", "an", "the", "and", "or", "but", "if", "then", "else", "when", "at", "by", "for",
+      "with", "about", "against", "between", "into", "through", "during", "before", "after",
+      "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under",
+      "again", "further", "then", "once", "here", "there", "all", "any", "both", "each", "few",
+      "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so",
+      "than", "too", "very", "can", "will", "just", "don", "should", "now", "is", "are", "was",
+      "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing",
+      "what", "which", "who", "whom", "this", "that", "these", "those", "am", "it", "its"
+    ]);
+
+    /* Vanguard Client-Side Watermark Drift Tracker */
+    class ClientWatermarkTracker {
+      constructor() {
+        this.anchors = new Set();
+        this.contextBudget = 8192;
+        this.generatedTokens = 0;
+      }
+
+      setPrompt(promptText) {
+        this.anchors.clear();
+        this.generatedTokens = 0;
+        const raw = promptText.toLowerCase().match(/[a-zA-Z0-9_\-\.\:\/]+/g) || [];
+        for (const w of raw) {
+          const clean = w.replace(/^[^\w]+|[^\w]+$/g, '');
+          if (clean.length >= 3 && !STOP_WORDS.has(clean) && isNaN(clean)) {
+            this.anchors.add(clean);
+          }
+        }
+        this.updateUI("");
+      }
+
+      update(token) {
+        this.generatedTokens++;
+      }
+
+      evaluate(accumulatedText) {
+        if (this.anchors.size === 0) {
+          return {
+            status: "ANCHOR LOCKED (100%)",
+            statusColor: "var(--bio)",
+            fidelity: 100,
+            drift: 0,
+            retentionPct: 100,
+            tokensGenerated: this.generatedTokens,
+            budgetPct: Math.round((this.generatedTokens / this.contextBudget) * 100),
+            anchorsList: []
+          };
+        }
+
+        const textLower = accumulatedText.toLowerCase();
+        let recalledCount = 0;
+        const trackedList = [];
+
+        for (const anchor of this.anchors) {
+          const isRecalled = textLower.includes(anchor);
+          if (isRecalled) {
+            recalledCount++;
+            trackedList.push({ token: anchor, status: 'active' });
+          } else {
+            trackedList.push({ token: anchor, status: 'decaying' });
+          }
+        }
+
+        const retention = recalledCount / this.anchors.size;
+        const saturation = Math.min(1.0, this.generatedTokens / this.contextBudget);
+        const driftRaw = ((1.0 - retention) * 0.65) + (saturation * 0.25) + 0.05;
+        const driftPct = Math.max(0, Math.min(100, Math.round(driftRaw * 100)));
+        const fidelityPct = Math.max(0, Math.min(100, 100 - driftPct));
+
+        let status = `ANCHOR LOCKED (${fidelityPct}%)`;
+        let statusColor = "var(--bio)";
+        if (fidelityPct < 50) {
+          status = `CRITICAL DRIFT (${fidelityPct}%)`;
+          statusColor = "var(--warn)";
+        } else if (fidelityPct < 72) {
+          status = `ATTENTION DILUTION (${fidelityPct}%)`;
+          statusColor = "#ffb86c";
+        } else if (fidelityPct < 88) {
+          status = `NOMINAL STABLE (${fidelityPct}%)`;
+          statusColor = "var(--signal-bright)";
+        }
+
+        return {
+          status,
+          statusColor,
+          fidelity: fidelityPct,
+          drift: driftPct,
+          retentionPct: Math.round(retention * 100),
+          tokensGenerated: this.generatedTokens,
+          budgetPct: Math.round(saturation * 100),
+          anchorsList: trackedList.slice(0, 16)
+        };
+      }
+
+      updateUI(accumulatedText) {
+        const metrics = this.evaluate(accumulatedText);
+        const pill = document.getElementById('driftStatusPill');
+        const fill = document.getElementById('driftMeterFill');
+        const retentionEl = document.getElementById('watermarkRetentionVal');
+        const driftEl = document.getElementById('driftOffsetVal');
+        const budgetEl = document.getElementById('contextBudgetVal');
+        const cluster = document.getElementById('anchorPillCluster');
+        const emptyNotice = document.getElementById('anchorEmptyNotice');
+
+        if (pill) {
+          pill.textContent = metrics.status;
+          pill.style.color = metrics.statusColor;
+          pill.style.borderColor = metrics.statusColor;
+        }
+        if (fill) {
+          fill.style.width = metrics.fidelity + '%';
+          if (metrics.fidelity < 50) {
+            fill.style.background = 'linear-gradient(90deg, var(--warn), #ffb86c)';
+          } else if (metrics.fidelity < 75) {
+            fill.style.background = 'linear-gradient(90deg, #ffb86c, var(--signal))';
+          } else {
+            fill.style.background = 'linear-gradient(90deg, var(--bio), var(--signal-bright))';
+          }
+        }
+        if (retentionEl) retentionEl.textContent = `${metrics.retentionPct}%`;
+        if (driftEl) driftEl.textContent = `${metrics.drift}%`;
+        if (budgetEl) budgetEl.textContent = `${metrics.tokensGenerated} / ${this.contextBudget} (${metrics.budgetPct}%)`;
+
+        if (cluster && emptyNotice) {
+          if (metrics.anchorsList.length === 0) {
+            emptyNotice.style.display = 'inline';
+            cluster.innerHTML = '';
+          } else {
+            emptyNotice.style.display = 'none';
+            cluster.innerHTML = metrics.anchorsList.map(a => `
+              <span class="anchor-pill ${a.status}">
+                <span>${a.status === 'active' ? '✓' : '●'}</span>${escapeHtml(a.token)}
+              </span>
+            `).join('');
+          }
+        }
+      }
+    }
+
+    const watermarkTracker = new ClientWatermarkTracker();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      circleViz = new EntropyCircleVisualizer('entropyCanvas');
+      loadAgents();
+
+      // Render initial sample artifact into vessel deck
+      const initialText = document.getElementById('runningTextBox').innerText;
+      renderArtifactPreview("critical_rag_mission_brief", initialText);
+    });
+
+    let chatHistory = [];
+    let isChatStreaming = false;
+    let currentChatAbortController = null;
+
+    function clearChatThinking() {
+      if (currentChatAbortController) {
+        try {
+          currentChatAbortController.abort();
+        } catch (e) {}
+        currentChatAbortController = null;
+      }
+      isChatStreaming = false;
+
+      const sendBtn = document.getElementById("btnSendChat");
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.innerText = "Send Directive ↵";
+      }
+
+      // Remove any lingering typing cursors
+      document.querySelectorAll(".typing-cursor").forEach(el => el.remove());
+
+      // Check if last assistant bubble is empty or stuck
+      const bubbles = document.querySelectorAll(".chat-msg.assistant .chat-msg-bubble");
+      if (bubbles.length > 0) {
+        const lastBubble = bubbles[bubbles.length - 1];
+        if (!lastBubble.innerText.trim() || lastBubble.innerText === "Thinking...") {
+          lastBubble.innerHTML = '<span style="color: var(--warn); font-style: italic;">[Thinking interrupted / cleared by operator]</span>';
+        }
+      }
+
+      // Show compile buttons
+      document.querySelectorAll(".chat-msg-actions").forEach(el => el.style.display = "flex");
+
+      const statusEl = document.getElementById("bridgeStatus");
+      if (statusEl) statusEl.innerText = "THINKING CLEARED";
+    }
+
+    function setAppMode(mode) {
+      appMode = mode;
+      document.querySelectorAll('.mode-pill-btn').forEach(b => b.classList.remove('active'));
+      
+      const titleEl = document.getElementById('directiveTitle');
+      const badgeEl = document.getElementById('directiveBadge');
+      const launchBtn = document.getElementById('btnLaunch');
+      const chunksSec = document.getElementById('groundedChunksSection');
+      const directiveDeckPanel = document.getElementById('directiveDeckPanel');
+      const runningViewportPanel = document.getElementById('runningViewportPanel');
+      const chatDeck = document.getElementById('chatDeck');
+
+      if (mode === 'chat') {
+        document.getElementById('btnModeChat').classList.add('active');
+        if (directiveDeckPanel) directiveDeckPanel.style.display = 'none';
+        if (runningViewportPanel) runningViewportPanel.style.display = 'none';
+        if (chatDeck) chatDeck.style.display = 'flex';
+        const chatInput = document.getElementById('chatInputText');
+        if (chatInput) chatInput.focus();
+        return;
+      }
+
+      if (directiveDeckPanel) directiveDeckPanel.style.display = 'flex';
+      if (runningViewportPanel) runningViewportPanel.style.display = 'flex';
+      if (chatDeck) chatDeck.style.display = 'none';
+
+      if (mode === 'agent') {
+        document.getElementById('btnModeAgent').classList.add('active');
+        titleEl.textContent = "Autonomous Agent Directive Deck";
+        badgeEl.textContent = "GROUNDED RAG EXECUTION";
+        launchBtn.textContent = "Engage Agent";
+        chunksSec.style.display = "block";
+      } else if (mode === 'tokens') {
+        document.getElementById('btnModeTokens').classList.add('active');
+        titleEl.textContent = "Raw Token Stream Probe";
+        badgeEl.textContent = "PROBABILITY PHYSICS";
+        launchBtn.textContent = "Stream Tokens";
+        chunksSec.style.display = "none";
+      } else if (mode === 'wrap') {
+        document.getElementById('btnModeWrap').classList.add('active');
+        titleEl.textContent = "Direct Markdown-to-Artifact Compiler";
+        badgeEl.textContent = "DIRECT WRAP STUDIO";
+        launchBtn.textContent = "Compile to Vessel";
+        chunksSec.style.display = "none";
+      }
+    }
+
+    function handleChatKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    }
+
+    function toggleChatRag(enabled) {
+      const badge = document.getElementById('chatGroundingBadge');
+      if (badge) {
+        badge.innerText = enabled ? "HIERARCHICAL RAG ACTIVE" : "RAG BYPASSED (PARAMETRIC)";
+        badge.style.color = enabled ? "var(--bio)" : "var(--ink-dim)";
+      }
+    }
+
+    function clearChatHistory() {
+      chatHistory = [];
+      const box = document.getElementById('chatTranscriptBox');
+      if (box) {
+        box.innerHTML = `
+          <div class="chat-msg assistant">
+            <div class="chat-msg-header">
+              <span style="color: var(--bio); font-weight: 700;">◈ SYSTEM / FRAMEWORK</span>
+              <span>ONLINE</span>
+            </div>
+            <div class="chat-msg-bubble">Session memory cleared. All CanaryAnchors reset. How can I assist you now?</div>
+          </div>
+        `;
+      }
+      const drawerWrap = document.getElementById('chatChunksDrawerSection');
+      if (drawerWrap) {
+        const countEl = document.getElementById('chatChunkCount');
+        if (countEl) countEl.innerText = 'Awaiting turn probe...';
+        const drawer = document.getElementById('chatChunksDrawer');
+        if (drawer) drawer.innerHTML = '';
+      }
+      watermarkTracker.reset();
+    }
+
+    async function sendChatMessage(e) {
+      if (e) e.preventDefault();
+      if (isChatStreaming) return;
+
+      const input = document.getElementById('chatInputText');
+      const userText = input.value.trim();
+      if (!userText) return;
+
+      input.value = '';
+      isChatStreaming = true;
+
+      const sendBtn = document.getElementById('btnSendChat');
+      if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.innerText = 'Thinking...';
+      }
+
+      // Set up CanaryAnchor tracker for this turn
+      watermarkTracker.setPrompt(userText);
+
+      // Append user message to transcript
+      const transcriptBox = document.getElementById('chatTranscriptBox');
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      const userMsgDiv = document.createElement('div');
+      userMsgDiv.className = 'chat-msg user';
+      userMsgDiv.innerHTML = `
+        <div class="chat-msg-header">
+          <span>${timeStr}</span>
+          <strong style="color: var(--signal-bright);">OPERATOR</strong>
+        </div>
+        <div class="chat-msg-bubble">${escapeHtml(userText)}</div>
+      `;
+      transcriptBox.appendChild(userMsgDiv);
+
+      // Append assistant placeholder message
+      const activeAgent = document.getElementById('agentSelect').value || 'general';
+      let agentLabel = activeAgent.toUpperCase();
+      if (activeAgent === 'direct') agentLabel = 'DIRECT LLM (NO AGENT)';
+      else if (activeAgent === 'general') agentLabel = 'GENERAL ASSISTANT';
+
+      const asstMsgDiv = document.createElement('div');
+      asstMsgDiv.className = 'chat-msg assistant';
+      const turnId = `chat_turn_${Date.now()}`;
+      asstMsgDiv.id = turnId;
+
+      asstMsgDiv.innerHTML = `
+        <div class="chat-msg-header">
+          <span style="color: var(--bio); font-weight: 700;">◈ ${agentLabel}</span>
+          <span>${timeStr}</span>
+          <span id="${turnId}_fidelity" style="color: var(--bio); margin-left: 8px;">100% FIDELITY</span>
+        </div>
+        <div class="chat-msg-bubble" id="${turnId}_bubble"><span class="typing-cursor"></span></div>
+        <div class="chat-msg-actions" id="${turnId}_actions" style="display: none;">
+          <button type="button" class="chat-compile-btn" onclick="compileTurnToArtifact('${turnId}')">
+            🧬 Compile Turn to Alien Artifact
+          </button>
+        </div>
+      `;
+      transcriptBox.appendChild(asstMsgDiv);
+      transcriptBox.scrollTop = transcriptBox.scrollHeight;
+
+      // Add to conversational history
+      chatHistory.push({ role: 'user', content: userText });
+
+      let accumulatedAssistantText = "";
+      const ragToggle = document.getElementById('chatRagToggle');
+      const ragEnabled = ragToggle ? ragToggle.checked : true;
+
+      try {
+        currentChatAbortController = new AbortController();
+        const resp = await fetch('/api/chat/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: chatHistory,
+            agent: activeAgent,
+            max_tokens: 256,
+            rag_enabled: ragEnabled
+          }),
+          signal: currentChatAbortController.signal
+        });
+
+        if (!resp.ok) {
+          throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+        }
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop(); // keep partial line
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith('data: ')) continue;
+            const dataPayload = trimmed.replace(/^data:\s*/, '');
+            if (dataPayload === '[DONE]') break;
+
+            try {
+              const eventObj = JSON.parse(dataPayload);
+              if (eventObj.type === 'retrieval') {
+                renderChatRetrievalChunks(eventObj.retrieved || []);
+              } else if (eventObj.type === 'verification') {
+                const fidEl = document.getElementById(`${turnId}_fidelity`);
+                if (fidEl && eventObj.verification) {
+                  fidEl.textContent = `${eventObj.verification.context_fidelity_pct}% FIDELITY // ${eventObj.verification.fidelity_status}`;
+                }
+              } else {
+                accumulatedAssistantText = eventObj.running_text || (accumulatedAssistantText + (eventObj.chosen_token || ''));
+                const bubble = document.getElementById(`${turnId}_bubble`);
+                if (bubble) {
+                  bubble.innerHTML = escapeHtml(accumulatedAssistantText) + '<span class="typing-cursor"></span>';
+                }
+                transcriptBox.scrollTop = transcriptBox.scrollHeight;
+
+                // Live Spokewheel & Token Physics updates
+                updateTokenPhysicsUI(eventObj);
+                watermarkTracker.update(eventObj.chosen_token);
+                watermarkTracker.updateUI(accumulatedAssistantText);
+              }
+            } catch (err) {
+              console.error("Chat SSE parse error:", err, dataPayload);
+            }
+          }
+        }
+
+      } catch (err) {
+        if (err.name === "AbortError") {
+          console.log("Chat stream aborted by operator.");
+          accumulatedAssistantText += " [Thinking Cleared]";
+        } else {
+          console.error("Chat streaming failed:", err);
+        }
+        accumulatedAssistantText += `\n[Stream Interrupted: ${err.message}]`;
+        const bubble = document.getElementById(`${turnId}_bubble`);
+        if (bubble) bubble.innerHTML = escapeHtml(accumulatedAssistantText);
+      } finally {
+        isChatStreaming = false;
+        if (sendBtn) {
+          sendBtn.disabled = false;
+          sendBtn.innerText = 'Send Directive ↵';
+        }
+
+        // Remove cursor
+        const bubble = document.getElementById(`${turnId}_bubble`);
+        if (bubble) bubble.innerHTML = escapeHtml(accumulatedAssistantText);
+
+        // Show compile button
+        const actions = document.getElementById(`${turnId}_actions`);
+        if (actions) actions.style.display = 'flex';
+
+        // Save assistant reply to chat history
+        chatHistory.push({ role: 'assistant', content: accumulatedAssistantText });
+
+        // Update live preview deck
+        renderArtifactPreview(`${activeAgent}_chat_turn`, accumulatedAssistantText);
+      }
+    }
+
+    function renderChatRetrievalChunks(chunks) {
+      const drawer = document.getElementById('chatChunksDrawer');
+      const countEl = document.getElementById('chatChunkCount');
+      if (!drawer) return;
+
+      if (!chunks || chunks.length === 0) {
+        if (countEl) countEl.innerText = "0 Chunks (Parametric)";
+        drawer.innerHTML = '<span style="color: var(--ink-dim); font-size: 0.72rem;">No grounded chunks for this turn.</span>';
+        return;
+      }
+
+      if (countEl) countEl.innerText = `${chunks.length} Grounded Chunks`;
+      drawer.innerHTML = chunks.map(c => `
+        <div class="chunk-chip" onclick="previewChunk('${escapeHtml(c.id)}')">
+          <strong style="color: var(--bio);">[${escapeHtml(c.id)}]</strong>
+          <span>${escapeHtml(c.title)}</span>
+          <span style="color: var(--signal-bright);">Sim: ${c.score}</span>
+        </div>
+      `).join('');
+    }
+
+    function compileTurnToArtifact(turnId) {
+      const bubble = document.getElementById(`${turnId}_bubble`);
+      if (!bubble) return;
+      const text = bubble.innerText;
+      const activeAgent = document.getElementById('agentSelect').value || 'framework';
+      const topic = `${activeAgent}_dialogue_turn`;
+      renderArtifactPreview(topic, text);
+
+      // Scroll smoothly down to the artifact preview card
+      document.getElementById('artifactVesselDeck').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function loadPrompt(text) {
+      document.getElementById('promptInput').value = text;
+      startExecution();
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        startExecution();
+      }
+    }
+
+    let previousAgentName = "general";
+
+    function toggleDirectMode(isDirect) {
+      const select = document.getElementById('agentSelect');
+      const chatNoAgentToggle = document.getElementById('chatNoAgentToggle');
+      const directiveNoAgentToggle = document.getElementById('directiveNoAgentToggle');
+      const directiveBadge = document.getElementById('directiveBadge');
+
+      if (chatNoAgentToggle) chatNoAgentToggle.checked = isDirect;
+      if (directiveNoAgentToggle) directiveNoAgentToggle.checked = isDirect;
+
+      if (isDirect) {
+        if (select.value !== 'direct') {
+          previousAgentName = select.value;
+        }
+        select.value = 'direct';
+        switchAgent('direct');
+        if (directiveBadge) directiveBadge.innerText = "DIRECT LLM + RAG (NO PERSONA)";
+      } else {
+        const target = (previousAgentName && previousAgentName !== 'direct') ? previousAgentName : 'general';
+        select.value = target;
+        switchAgent(target);
+        if (directiveBadge) directiveBadge.innerText = "GROUNDED RAG EXECUTION";
+      }
+    }
+
+    function loadAgents() {
+      fetch('/api/agents')
+        .then(r => r.json())
+        .then(data => {
+          if (!data || !data.available) return;
+          const select = document.getElementById('agentSelect');
+          select.innerHTML = data.available.map(a => {
+            let label = a.name.toUpperCase();
+            if (a.name === 'direct') label = '⚡ DIRECT (NO AGENT)';
+            else if (a.name === 'general') label = '🌐 GENERAL (USER AGENT)';
+            return `
+              <option value="${a.name}" ${data.active && data.active.name === a.name ? 'selected' : ''}>
+                ${label}
+              </option>
+            `;
+          }).join('');
+          if (data.active) {
+            const isDirect = (data.active.name === 'direct');
+            const displayLabel = isDirect ? "DIRECT (NO PERSONA)" : `${data.active.name.toUpperCase()} READY`;
+            document.getElementById('bridgeStatus').innerText = displayLabel;
+            const chatToggle = document.getElementById('chatNoAgentToggle');
+            const dirToggle = document.getElementById('directiveNoAgentToggle');
+            if (chatToggle) chatToggle.checked = isDirect;
+            if (dirToggle) dirToggle.checked = isDirect;
+          }
+        })
+        .catch(console.error);
+    }
+
+    function switchAgent(name) {
+      const chatNoAgentToggle = document.getElementById('chatNoAgentToggle');
+      const directiveNoAgentToggle = document.getElementById('directiveNoAgentToggle');
+      const isDirect = (name === 'direct');
+
+      if (chatNoAgentToggle) chatNoAgentToggle.checked = isDirect;
+      if (directiveNoAgentToggle) directiveNoAgentToggle.checked = isDirect;
+
+      if (!isDirect) {
+        previousAgentName = name;
+      }
+
+      fetch('/api/agents/switch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent: name })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.active) {
+          const activeName = data.active.name.toUpperCase();
+          const displayLabel = isDirect ? "DIRECT (NO PERSONA)" : `${activeName} ACTIVE`;
+          document.getElementById('bridgeStatus').innerText = displayLabel;
+        }
+      })
+      .catch(console.error);
+    }
+
+    /* Start Execution (Streaming Turn or Direct Wrap) */
+    function startExecution(e) {
+      if (e) e.preventDefault();
+      const prompt = document.getElementById('promptInput').value.trim();
+      if (!prompt) return;
+
+      if (appMode === 'wrap') {
+        compileDirectToArtifact();
+        return;
+      }
+
+      if (activeEventSource) activeEventSource.close();
+
+      currentPrompt = prompt;
+      watermarkTracker.setPrompt(prompt);
+
+      const statusEl = document.getElementById('bridgeStatus');
+      const genStatusEl = document.getElementById('genStatus');
+      const runningBox = document.getElementById('runningTextBox');
+      const summaryContainer = document.getElementById('verificationSummaryContainer');
+
+      statusEl.innerText = appMode === 'agent' ? "AGENT ENGAGED" : "STREAMING";
+      genStatusEl.innerText = "EXECUTING...";
+      genStatusEl.style.color = "var(--bio)";
+      runningBox.innerText = "";
+      summaryContainer.style.display = "none";
+      activeChunks = [];
+
+      const endpoint = appMode === 'agent'
+        ? `/api/agent/stream?prompt=${encodeURIComponent(prompt)}&max_tokens=96`
+        : `/api/tokens/stream?prompt=${encodeURIComponent(prompt)}&max_tokens=48`;
+
+      activeEventSource = new EventSource(endpoint);
+
+      activeEventSource.onmessage = function(evt) {
+        if (evt.data === "[DONE]") {
+          statusEl.innerText = "MISSION COMPLETE";
+          genStatusEl.innerText = "COMPLETED";
+          genStatusEl.style.color = "var(--spore)";
+          activeEventSource.close();
+          activeEventSource = null;
+          
+          // Re-render vessel artifact with completed generation
+          const agentSelect = document.getElementById('agentSelect');
+          const topic = `${agentSelect.value}_execution_output`;
+          renderArtifactPreview(topic, runningBox.innerText);
+          return;
+        }
+
+        try {
+          const data = JSON.parse(evt.data);
+
+          if (data.type === "retrieval") {
+            renderRetrievalChunks(data.retrieved || []);
+          } else if (data.type === "verification") {
+            renderVerificationSummary(data.verification);
+          } else {
+            // Token step event
+            updateTokenPhysicsUI(data);
+            runningBox.innerText = data.running_text || (runningBox.innerText + data.chosen_token);
+            watermarkTracker.update(data.chosen_token);
+            watermarkTracker.updateUI(runningBox.innerText);
+          }
+        } catch (err) {
+          console.error("Parse error:", err);
+        }
+      };
+
+      activeEventSource.onerror = function() {
+        genStatusEl.innerText = "SOCKET CLOSED";
+        statusEl.innerText = "STANDBY";
+        if (activeEventSource) activeEventSource.close();
+      };
+    }
+
+    function renderRetrievalChunks(chunks) {
+      activeChunks = chunks;
+      const countEl = document.getElementById('chunkCount');
+      const drawer = document.getElementById('chunksDrawer');
+
+      countEl.innerText = `${chunks.length} GROUNDED CHUNKS`;
+      if (chunks.length === 0) {
+        drawer.innerHTML = '<span style="color: var(--warn); font-size: 0.74rem;">No matching chunks retrieved. Fallback reasoning.</span>';
+        return;
+      }
+      drawer.innerHTML = chunks.map(c => `
+        <div class="chunk-chip" onclick="previewChunk('${escapeHtml(c.id)}')">
+          <strong style="color: var(--bio);">[${escapeHtml(c.id)}]</strong>
+          <span>${escapeHtml(c.title)}</span>
+          <span style="color: var(--signal-bright);">Sim: ${c.score}</span>
+        </div>
+      `).join('');
+    }
+
+    function previewChunk(chunkId) {
+      const c = activeChunks.find(x => x.id === chunkId);
+      if (c) alert(`[CHUNK: ${c.id}]\n\n${c.title}\nSimilarity: ${c.score}`);
+    }
+
+    function renderVerificationSummary(v) {
+      if (!v) return;
+      currentVerification = v;
+      const container = document.getElementById('verificationSummaryContainer');
+      const box = document.getElementById('verificationSummaryBox');
+      container.style.display = "block";
+
+      const isGap = v.epistemological_gap_declared;
+      box.className = `verification-summary-box ${isGap ? 'gap-warning' : ''}`;
+
+      box.innerHTML = `
+        <div style="font-weight: 800; color: ${isGap ? 'var(--warn)' : 'var(--bio)'}; margin-bottom: 6px;">
+          ${isGap ? '⚠️ [EPISTEMOLOGICAL GAP DECLARED — AMBIGUOUS GENERATION]' : '✅ [VERIFICATION SUMMARY — GROUNDED PROVENANCE CONFIRMED]'}
+        </div>
+        <div>• <strong>Retrieval Confidence:</strong> ${v.retrieval_confidence} (Score: ${v.mean_confidence})</div>
+        <div>• <strong>Mean Token Entropy:</strong> ${v.mean_entropy_bits} bits ${isGap ? '(HIGH UNCERTAINTY)' : '(COLLAPSED DISTRIBUTION)'}</div>
+        <div>• <strong>Context Fidelity:</strong> ${v.context_fidelity_pct || 98.5}% (Status: ${v.fidelity_status || 'ANCHOR LOCKED'})</div>
+        <div>• <strong>Chunks Cited:</strong> ${v.chunks_cited.map(c => `<code>[${c}]</code>`).join(' ') || 'None'}</div>
+        <div>• <strong>Status:</strong> ${v.verification_status} pursuant to sovereign governance</div>
+      `;
+    }
+
+    function updateTokenPhysicsUI(data) {
+      if (circleViz) circleViz.update(data);
+
+      const stepStr = `STEP ${String(data.step).padStart(2, '0')}`;
+      document.getElementById('metricToken').innerText = `${stepStr}: ${JSON.stringify(data.chosen_token)}`;
+      document.getElementById('metricProb').innerText = Number(data.prob).toFixed(3);
+      document.getElementById('metricEntropy').innerText = `${Number(data.entropy).toFixed(2)}b`;
+
+      const entropy = Number(data.entropy) || 0;
+      const badge = document.getElementById('entropyBadge');
+      if (entropy < 0.65) {
+        badge.innerText = "CERTAINTY (LOW H)";
+        badge.style.color = "var(--bio)";
+      } else if (entropy < 1.45) {
+        badge.innerText = "BALANCED REASONING";
+        badge.style.color = "var(--signal-bright)";
+      } else {
+        badge.innerText = "EPISTEMIC RISK (HIGH H)";
+        badge.style.color = "var(--warn)";
+      }
+
+      // Populate Candidate Logprob Pool Table
+      const tbody = document.getElementById('candidatesTableBody');
+      if (data.top && data.top.length > 0) {
+        tbody.innerHTML = data.top.map(c => {
+          const pct = (c.prob * 100).toFixed(1);
+          return `
+            <tr style="border-bottom: 1px solid rgba(157, 92, 255, 0.1);">
+              <td style="padding: 6px; color: var(--spore);">${escapeHtml(c.token)}</td>
+              <td style="padding: 6px; color: var(--bio);">${pct}%</td>
+              <td style="padding: 6px;">
+                <div style="width: 100%; height: 6px; background: rgba(10,5,18,0.7); border-radius: 4px; overflow: hidden;">
+                  <div style="width: ${pct}%; height: 100%; background: var(--signal);"></div>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    /* =========================================================================
+       LIVE ALIEN ARTIFACT COMPILER & VESSEL RENDERER
+       ========================================================================= */
+    function compileDirectToArtifact() {
+      const text = document.getElementById('promptInput').value.trim();
+      if (!text) return;
+      const agentSelect = document.getElementById('agentSelect');
+      const topic = `${agentSelect.value}_direct_artifact`;
+      renderArtifactPreview(topic, text);
+
+      // Scroll smoothly down to the artifact preview card
+      document.getElementById('artifactVesselDeck').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function renderArtifactPreview(topic, markdownText) {
+      lastCompiledMarkdown = markdownText;
+      lastCompiledTopic = topic;
+
+      const titleEl = document.getElementById('artifactVesselTitle');
+      const metaEl = document.getElementById('artifactMetaLabel');
+      const container = document.getElementById('artifactRenderedSections');
+
+      const cleanTopic = topic.replace(/_/g, ' ').toUpperCase();
+      titleEl.textContent = `LIVE ALIEN ARTIFACT // ${cleanTopic}`;
+      metaEl.textContent = `// VESSEL READY // SOURCE: ${markdownText.length} CHARS // TIMESTAMP: ${new Date().toLocaleTimeString()}`;
+
+      // Calculate synthesis confidence
+      const driftMetrics = watermarkTracker.evaluate(markdownText);
+      const confPill = document.getElementById('vesselConfScorePill');
+      const confFill = document.getElementById('vesselConfFill');
+      const driftStat = document.getElementById('vesselDriftStat');
+      const retStat = document.getElementById('vesselRetentionStat');
+
+      let conf = driftMetrics.fidelity;
+      if (markdownText.includes('#')) conf = Math.min(99, conf + 2);
+      if (markdownText.includes('[ ]') || markdownText.includes('* ')) conf = Math.min(99, conf + 2);
+      if (markdownText.includes('```')) conf = Math.min(99, conf + 2);
+
+      confPill.textContent = `${conf}% // ${conf >= 85 ? 'HIGH INTEGRITY' : 'NOMINAL STABLE'}`;
+      confFill.style.width = `${conf}%`;
+      driftStat.textContent = `${driftMetrics.drift}%`;
+      retStat.textContent = `${driftMetrics.retentionPct}% (Anchors Preserved)`;
+
+      // Parse Markdown into Cut-Corner Panels, Checkpods, and Code Blocks
+      container.innerHTML = parseMarkdownToVesselHtml(markdownText);
+    }
+
+    function parseMarkdownToVesselHtml(md) {
+      const lines = md.split('\n');
+      let outHtml = '';
+      let curTitle = 'EXECUTIVE SUMMARY';
+      let curItems = [];
+      let inCode = false;
+      let codeBuffer = [];
+      let boxId = 0;
+
+      function flush() {
+        if (curItems.length === 0) return;
+        let bodyHtml = '';
+        let chkBuffer = [];
+
+        function flushCheckboxes() {
+          if (chkBuffer.length > 0) {
+            bodyHtml += `<div class="check-list">${chkBuffer.join('')}</div>`;
+            chkBuffer = [];
+          }
+        }
+
+        curItems.forEach(item => {
+          if (item.type === 'chk') {
+            chkBuffer.push(`
+              <label class="check-row" for="${item.id}">
+                <input type="checkbox" id="${item.id}" class="check-input" ${item.checked ? 'checked' : ''}>
+                <div class="check-pod"><span class="check-glyph">✓</span></div>
+                <span class="check-text">${escapeHtml(item.text)}</span>
+              </label>
+            `);
+          } else if (item.type === 'code') {
+            flushCheckboxes();
+            const cleanCode = escapeHtml(item.code);
+            bodyHtml += `
+              <div class="code-box">
+                <pre class="code-content">${cleanCode}</pre>
+                <button class="btn-copy" onclick="copyCode(this, '${encodeURIComponent(item.code)}')">Copy</button>
+              </div>
+            `;
+          } else {
+            flushCheckboxes();
+            bodyHtml += `<p style="margin-bottom: 8px;">${escapeHtml(item.text).replace(/`([^`]+)`/g, '<code>$1</code>')}</p>`;
+          }
+        });
+        flushCheckboxes();
+
+        outHtml += `
+          <div class="rendered-alien-panel">
+            <div class="rendered-panel-header">
+              <span class="rendered-panel-title">${escapeHtml(curTitle)}</span>
+              <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--bio);">[ACTIVE POD]</span>
+            </div>
+            ${bodyHtml}
+          </div>
+        `;
+        curItems = [];
+      }
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('```')) {
+          if (inCode) {
+            curItems.push({ type: 'code', code: codeBuffer.join('\n') });
+            inCode = false;
+            codeBuffer = [];
+          } else {
+            inCode = true;
+            codeBuffer = [];
+          }
+          continue;
+        }
+        if (inCode) {
+          codeBuffer.push(line);
+          continue;
+        }
+        if (!trimmed) continue;
+
+        if (trimmed.startsWith('#')) {
+          flush();
+          curTitle = trimmed.replace(/^#+\s*/, '');
+          continue;
+        }
+
+        const chkMatch = trimmed.match(/^[*\-]\s+\[([ xX])\]\s+(.*)$/);
+        if (chkMatch) {
+          boxId++;
+          curItems.push({ type: 'chk', id: `pod_${boxId}`, checked: chkMatch[1].toLowerCase() === 'x', text: chkMatch[2] });
+          continue;
+        }
+
+        const bulletMatch = trimmed.match(/^[*\-]\s+(.*)$/);
+        if (bulletMatch) {
+          boxId++;
+          curItems.push({ type: 'chk', id: `pod_${boxId}`, checked: false, text: bulletMatch[1] });
+          continue;
+        }
+
+        curItems.push({ type: 'p', text: trimmed });
+      }
+      if (inCode && codeBuffer.length > 0) {
+        curItems.push({ type: 'code', code: codeBuffer.join('\n') });
+      }
+      flush();
+
+      return outHtml || '<div class="rendered-alien-panel"><p>No content to render.</p></div>';
+    }
+
+    function copyCode(btn, encodedCode) {
+      const code = decodeURIComponent(encodedCode);
+      navigator.clipboard.writeText(code).then(() => {
+        const orig = btn.innerText;
+        btn.innerText = "Copied!";
+        setTimeout(() => btn.innerText = orig, 1500);
+      });
+    }
+
+    /* Save Live Artifact Directly into ./artifacts/ */
+    function saveArtifactToDesktop() {
+      const btn = document.getElementById('btnSaveToDesktop');
+      const statusEl = document.getElementById('saveStatusIndicator');
+      const content = lastCompiledMarkdown || document.getElementById('runningTextBox').innerText;
+      const topic = lastCompiledTopic || "critical_rag_artifact";
+
+      btn.disabled = true;
+      statusEl.innerText = "⏳ Compiling Alien Artifact...";
+
+      fetch('/api/artifact/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: topic,
+          content: `# ${topic.replace(/_/g, ' ').toUpperCase()}\n\n${content}`
+        })
+      })
+      .then(r => r.json())
+      .then(data => {
+        btn.disabled = false;
+        if (data.status === 'ok') {
+          const winPath = data.artifact_path.replace(/\\/g, '/');
+          statusEl.innerHTML = `✅ Saved: <a href="file:///${winPath}" target="_blank" style="color: var(--bio); text-decoration: underline; font-weight: 700;">${data.filename}</a>`;
+        } else {
+          statusEl.innerText = `❌ Error: ${data.error || 'Failed'}`;
+        }
+      })
+      .catch(err => {
+        btn.disabled = false;
+        statusEl.innerText = `❌ Error: ${err.message}`;
+      });
+    }
+
+    function copyArtifactHtml() {
+      const content = lastCompiledMarkdown || document.getElementById('runningTextBox').innerText;
+      const topic = lastCompiledTopic || "critical_rag_artifact";
+      
+      // Request complete standalone HTML from backend
+      fetch('/api/artifact/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, content: `# ${topic.toUpperCase()}\n\n${content}` })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'ok') {
+          navigator.clipboard.writeText(data.output || content);
+          alert("Full Alien Artifact HTML copied to clipboard!");
+        }
+      });
+    }
+
+    function openArtifactInNewTab() {
+      const content = lastCompiledMarkdown || document.getElementById('runningTextBox').innerText;
+      const topic = lastCompiledTopic || "critical_rag_artifact";
+      
+      fetch('/api/artifact/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, content: `# ${topic.toUpperCase()}\n\n${content}` })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'ok') {
+          const winPath = data.artifact_path.replace(/\\/g, '/');
+          window.open(`file:///${winPath}`, '_blank');
+        }
+      });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>

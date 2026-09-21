@@ -1,0 +1,11 @@
+{
+  "document_id": "doc_2026_09_sample_001",
+  "title": "Critical Path RAG Architecture Specification",
+  "source_uri": "file:///./assets/ARCHITECTURE_OVERVIEW.md",
+  "metadata": {
+    "author": "Antigravity Engineering",
+    "domain": "systems_architecture",
+    "version": "1.0.0",
+    "tags": ["wsl2", "pgvector", "snakemake", "ragas"]
+  }
+}

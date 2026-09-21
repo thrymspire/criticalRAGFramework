@@ -1,0 +1,15 @@
+services:
+  llama-server-cpu:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    ports:
+      - "8080:8080"
+    volumes:
+      - /mnt/c/Users/Thrym/Desktop/LLM's:/models:ro
+    command: >
+      -m /models/NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf
+      --host 0.0.0.0 --port 8080 -c 8192 --embedding --pooling mean
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 6G
