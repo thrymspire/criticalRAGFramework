@@ -1338,7 +1338,8 @@ Ready to engage. Select an agent persona above, enter a directive, and click "En
         const decoder = new TextDecoder();
         let buffer = '';
 
-        while (true) {
+        let streamCompleted = false;
+        while (!streamCompleted) {
           const { done, value } = await reader.read();
           if (done) break;
 
@@ -1350,7 +1351,10 @@ Ready to engage. Select an agent persona above, enter a directive, and click "En
             const trimmed = line.trim();
             if (!trimmed || !trimmed.startsWith('data: ')) continue;
             const dataPayload = trimmed.replace(/^data:\s*/, '');
-            if (dataPayload === '[DONE]') break;
+            if (dataPayload === '[DONE]') {
+              streamCompleted = true;
+              break;
+            }
 
             try {
               const eventObj = JSON.parse(dataPayload);
@@ -1379,6 +1383,9 @@ Ready to engage. Select an agent persona above, enter a directive, and click "En
             }
           }
         }
+        try {
+          await reader.cancel();
+        } catch (_) {}
 
       } catch (err) {
         if (err.name === "AbortError") {
