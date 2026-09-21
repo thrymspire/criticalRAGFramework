@@ -32,7 +32,7 @@ else
     cd "$PROJECT_DIR"
     nohup "$PYTHON_BIN" -m core.server > "$LOG_FILE" 2>&1 &
     NEW_PID=$!
-    sleep 1.5
+    sleep 2
 
     if kill -0 "$NEW_PID" 2>/dev/null; then
         echo "[+] Sovereign Harness Server successfully started (PID: $NEW_PID)."
@@ -46,7 +46,7 @@ fi
 
 # Verify health
 echo "[*] Probing Harness API..."
-if curl -s --max-time 3 "http://127.0.0.1:8090/api/status" >/dev/null 2>&1; then
+if curl -s --max-time 5 "http://127.0.0.1:8090/api/status" >/dev/null 2>&1; then
     echo "[+] Harness API is healthy and answering on http://localhost:8090"
     echo "[+] Web Cockpit: http://localhost:8090"
 else

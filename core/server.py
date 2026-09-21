@@ -327,21 +327,24 @@ class HarnessHandler(SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def _check_port(self, port: int) -> bool:
+        import socket
         try:
-            with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=1) as resp:
-                return resp.status < 500
-        except Exception:
+            with socket.create_connection(("127.0.0.1", port), timeout=0.15):
+                return True
+        except (OSError, socket.timeout):
             pass
         win_curl = "/mnt/c/Windows/System32/curl.exe"
-        if not os.path.exists(win_curl):
-            win_curl = "curl.exe"
-        try:
-            res = subprocess.run([win_curl, "-s", "-o", "/dev/null", "-w", "%{http_code}", f"http://127.0.0.1:{port}/health"], capture_output=True, text=True, timeout=2)
-            code = res.stdout.strip()
-            if code in ("200", "204", "301", "302", "404"):
-                return True
-        except Exception:
-            pass
+        if os.path.exists(win_curl):
+            try:
+                res = subprocess.run(
+                    [win_curl, "-s", "-o", "/dev/null", "-w", "%{http_code}", f"http://127.0.0.1:{port}/health"],
+                    capture_output=True, text=True, timeout=0.5
+                )
+                code = res.stdout.strip()
+                if code in ("200", "204", "301", "302", "404"):
+                    return True
+            except Exception:
+                pass
         return False
 
 
