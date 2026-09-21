@@ -1,18 +1,30 @@
 """
 Agent Loader — core/agent_loader.py
-Loads agent definitions from agents/<name>.md using python-frontmatter.
+Loads agent definitions from agents/<name>.md using its bundled frontmatter reader.
 Maintains active agent runtime state for CLI and Web Cockpit.
 """
 
 from pathlib import Path
 import json
-import frontmatter
 from typing import Dict, Any, List
 
 AGENTS_DIR = Path(__file__).parent.parent / "agents"
 STATE_FILE = Path(__file__).parent.parent / "ui" / "state.json"
 
 _ACTIVE_AGENT_NAME = "engineer"
+
+def _parse_frontmatter(path: Path) -> tuple[dict[str, str], str]:
+    """Read the scalar-only frontmatter format used by bundled agents."""
+    text = path.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        return {}, text
+    _, header, body = text.split("---", 2)
+    metadata = {}
+    for line in header.splitlines():
+        if ":" in line:
+            key, value = line.split(":", 1)
+            metadata[key.strip()] = value.strip().strip('"\'')
+    return metadata, body.lstrip("\r\n")
 
 
 def load_agent(name: str) -> Dict[str, Any]:
@@ -27,22 +39,22 @@ def load_agent(name: str) -> Dict[str, Any]:
             f"Agent '{name}' not found. Available agents: {available}"
         )
 
-    post = frontmatter.load(path)
+    metadata, content = _parse_frontmatter(path)
 
     agent = {
-        "name": post.get("name", name),
-        "description": post.get("description", ""),
-        "system_prompt": post.content.strip(),
-        "temperature": float(post.get("temperature", 0.7)),
-        "top_logprobs": int(post.get("top_logprobs", 5)),
-        "max_tokens": int(post.get("max_tokens", 1024)),
-        "role": post.get("role", post.get("description", "Sovereign Agent")),
-        "model": post.get("model", "nemotron-4b"),
+        "name": metadata.get("name", name),
+        "description": metadata.get("description", ""),
+        "system_prompt": content.strip(),
+        "temperature": float(metadata.get("temperature", 0.7)),
+        "top_logprobs": int(metadata.get("top_logprobs", 5)),
+        "max_tokens": int(metadata.get("max_tokens", 1024)),
+        "role": metadata.get("role", metadata.get("description", "Sovereign Agent")),
+        "model": metadata.get("model", "nemotron-4b"),
         "path": str(path),
     }
 
     # Pass through any extra frontmatter keys
-    for key, value in post.metadata.items():
+    for key, value in metadata.items():
         if key not in agent:
             agent[key] = value
 

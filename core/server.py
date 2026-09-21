@@ -30,12 +30,34 @@ class HarnessHandler(SimpleHTTPRequestHandler):
     """Custom request handler bridging the UI to the harness core and streaming bridge."""
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=str(PROJECT_ROOT), **kwargs)
+        super().__init__(*args, directory=str(UI_DIR), **kwargs)
 
+    def _authorized(self) -> bool:
+        """Require a bearer token when CRITICAL_RAG_API_TOKEN is configured."""
+        expected = os.environ.get("CRITICAL_RAG_API_TOKEN")
+        if not expected:
+            return True
+        supplied = self.headers.get("Authorization", "").removeprefix("Bearer ")
+        return hmac.compare_digest(supplied, expected)
+
+    def _require_api_auth(self) -> bool:
+        if self._authorized():
+            return True
+        self.send_error(401, "Unauthorized")
+        return False
+
+    @staticmethod
+    def _bounded_int(value, default: int, minimum: int, maximum: int) -> int:
+        try:
+            return max(minimum, min(int(value), maximum))
+        except (TypeError, ValueError):
+            return default
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
+        if path.startswith("/api/") and not self._require_api_auth():
+            return
 
         # Route UI index as default
         if path in ("/", "/ui", "/ui/"):
@@ -71,13 +93,12 @@ class HarnessHandler(SimpleHTTPRequestHandler):
         # Phase 2: Server-Sent Events (SSE) Real-Time Token Stream
         if path == "/api/tokens/stream":
             prompt = query.get("prompt", ["What is 2+2? Answer in one sentence."])[0]
-            max_tokens = int(query.get("max_tokens", [32])[0])
+            max_tokens = self._bounded_int(query.get("max_tokens", [32])[0], 32, 1, 512)
 
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream")
             self.send_header("Cache-Control", "no-cache")
             self.send_header("Connection", "keep-alive")
-            self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
 
             try:
@@ -94,13 +115,12 @@ class HarnessHandler(SimpleHTTPRequestHandler):
         # Phase 4: Full Autonomous ReAct Agent Stream (RAG Retrieval + Token Physics + Verification)
         if path == "/api/agent/stream":
             prompt = query.get("prompt", ["Explain the Critical Path cluster."])[0]
-            max_tokens = int(query.get("max_tokens", [64])[0])
+            max_tokens = self._bounded_int(query.get("max_tokens", [64])[0], 64, 1, 512)
 
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream")
             self.send_header("Cache-Control", "no-cache")
             self.send_header("Connection", "keep-alive")
-            self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
 
             orchestrator = HarnessOrchestrator()
@@ -140,7 +160,7 @@ class HarnessHandler(SimpleHTTPRequestHandler):
                 "nodes": {
                     "llama_server": self._check_port(8080),
                     "comfyui": self._check_port(8188),
-                    "docker_engine": True
+                    "docker_engine": self._check_port(2375)
                 },
                 "models": {
                     "active_endpoint": "http://127.0.0.1:8080/v1",
@@ -162,11 +182,11 @@ class HarnessHandler(SimpleHTTPRequestHandler):
             telemetry = {
                 "center": {"name": "Critical Path Harness", "status": "active", "type": "enclave"},
                 "nodes": [
-                    {"id": "node-llama", "name": "llama-server (Vulkan)", "port": 8080, "status": "online", "color": "#9d5cff"},
-                    {"id": "node-comfy", "name": "ComfyUI (ROCm 780M)", "port": 8188, "status": "online", "color": "#5ffbf1"},
-                    {"id": "node-store", "name": "Store Node (Corpus)", "path": "/data/corpus", "status": "online", "color": "#c084fc"},
+                    {"id": "node-llama", "name": "llama-server (Vulkan)", "port": 8080, "status": "reachable" if self._check_port(8080) else "offline", "color": "#9d5cff"},
+                    {"id": "node-comfy", "name": "ComfyUI (ROCm 780M)", "port": 8188, "status": "reachable" if self._check_port(8188) else "offline", "color": "#5ffbf1"},
+                    {"id": "node-store", "name": "Store Node (Corpus)", "path": "/data/corpus", "status": "available" if Path("/data/corpus").exists() else "offline", "color": "#c084fc"},
                     {"id": "node-docker", "name": "Docker Engine", "port": 2375, "status": "standby", "color": "#ff6b81"},
-                    {"id": "node-vault", "name": "Secrets Enclave", "path": "/etc/harness/secrets", "status": "secure", "color": "#a996d6"}
+                    {"id": "node-vault", "name": "Secrets Enclave", "path": "/etc/harness/secrets", "status": "configured" if get_vault().secrets_dir.exists() else "unconfigured", "color": "#a996d6"}
                 ]
             }
             self._send_json(telemetry)
@@ -188,15 +208,13 @@ class HarnessHandler(SimpleHTTPRequestHandler):
 
         if self.path == "/api/chat":
             prompt = payload.get("prompt", "")
-            orchestrator = HarnessOrchestrator()
-            result = orchestrator.step(prompt)
-            self._send_json(result)
+            self._send_json({"status": "error", "error": "Use /api/chat/stream for chat requests"})
             return
 
         if self.path == "/api/chat/stream":
             messages = payload.get("messages", [])
             agent_name = payload.get("agent", "")
-            max_tokens = int(payload.get("max_tokens", 512))
+            max_tokens = self._bounded_int(payload.get("max_tokens", 512), 512, 1, 512)
             rag_enabled = bool(payload.get("rag_enabled", True))
 
             if agent_name:
@@ -213,7 +231,6 @@ class HarnessHandler(SimpleHTTPRequestHandler):
             self.send_header("Content-Type", "text/event-stream")
             self.send_header("Cache-Control", "no-cache")
             self.send_header("Connection", "keep-alive")
-            self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
 
             orchestrator = HarnessOrchestrator()
@@ -291,9 +308,6 @@ class HarnessHandler(SimpleHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self.send_response(200)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
     def _serve_file(self, path: Path, content_type: str):
@@ -309,7 +323,6 @@ class HarnessHandler(SimpleHTTPRequestHandler):
         body = json.dumps(data, indent=2).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(body)
 
@@ -332,7 +345,7 @@ class HarnessHandler(SimpleHTTPRequestHandler):
         return False
 
 
-def start_harness_server(host: str = "0.0.0.0", port: int = 8090):
+def start_harness_server(host: str = "127.0.0.1", port: int = 8090):
     server = ThreadedHTTPServer((host, port), HarnessHandler)
     print(f"[HARNESS SERVER] Phase 2 Streaming Bridge active on http://{host}:{port}")
     print(f"[HARNESS SERVER] Serving UI from {UI_DIR}")

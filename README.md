@@ -10,7 +10,7 @@
 [![Nemotron 4B](https://img.shields.io/badge/Model-Nemotron--3--Nano--4B-5ffbf1?style=for-the-badge)](#inference-pipeline)
 [![ReAct Agents](https://img.shields.io/badge/Agents-Autonomous%20ReAct%20Swarm-ff6b81?style=for-the-badge)](#agent-architecture)
 
-**A high-assurance, hardware-grounded Retrieval-Augmented Generation framework with real-time Shannon entropy gating, radial token probability physics, and autonomous ReAct agent swarms.**
+**A local, evidence-oriented Retrieval-Augmented Generation prototype with real-time token telemetry, citation validation, and configurable agent personas.**
 
 [Architecture](#system-topology) • [Entropy Spoke Engine](#epistemic-entropy-gates) • [Turnkey Quickstart](#turnkey-quickstart) • [Canonical Schema](#canonical-chunk-schema) • [Agent Swarm](#agent-architecture)
 
@@ -20,7 +20,7 @@
 
 ## Executive Overview
 
-**Critical RAG Framework** is an enterprise-grade, deterministic retrieval-augmented generation engine engineered to eliminate hallucination in high-consequence domains. Rather than treating LLM output as a black box, the framework taps into the live token emission pipeline, computing instantaneous **Shannon Entropy** across top-k logprob distributions to guarantee that generated facts are strictly grounded in canonical evidence.
+**Critical RAG Framework** is a local RAG prototype. It validates that response citations refer to retrieved chunks and exposes token-distribution telemetry. Entropy is a model-uncertainty signal, not a guarantee of factual correctness; use independent evaluation before high-consequence deployment.
 
 The frontend features a real-time **Radial Spoke Visualizer** canvas (`circle.js`) that translates token probability distributions into dynamic physics spokes and orbital telemetry.
 
@@ -28,10 +28,10 @@ The frontend features a real-time **Radial Spoke Visualizer** canvas (`circle.js
 
 ## Key Capabilities
 
-- 🎯 **Deterministic Citation Grounding:** Every factual assertion must resolve to an immutable canonical chunk identifier (e.g. `[CHK-20260920-00042]`) verified against the local vector corpus.
-- ⚡ **Real-Time Epistemic Entropy Gates:** Shannon entropy is computed token-by-token. High entropy triggers automatic ReAct deliberation or citation fallback before hallucination can propagate.
+- 🎯 **Citation Validation:** Responses with retrieved context must cite retrieved chunk IDs (e.g. `[CHK-20260920-00042]`); missing or unknown citations fail the verification gate.
+- ⚡ **Real-Time Token Telemetry:** Shannon entropy is computed from the reported top-token distribution and shown as an uncertainty diagnostic, not a hallucination detector.
 - 🎡 **Radial Spoke Radar HUD:** Visualizes live candidate tokens, probability distributions, and certainty bands in an alien-bioluminescent design language.
-- 🛡️ **Zero-Dependency Core:** Built entirely on Python 3 standard libraries (`http.server`, `urllib`, `sqlite3`, `json`), requiring zero external pip dependencies for harness execution.
+- 🛡️ **Local-Safe Defaults:** The server binds to loopback by default, exposes no source-tree files, and supports bearer-token protection through `CRITICAL_RAG_API_TOKEN`.
 - 🌉 **Cross-Boundary Host-Enclave Bridge:** Seamlessly links Windows Vulkan acceleration (`llama-server.exe` on port 8080) with isolated Linux execution enclaves on port 8090 with automated network bridge.
 - 🤖 **Dual-Mode Inference:** Toggle instantly between raw agentless RAG querying (General Chat) and multi-step autonomous ReAct agent workflows.
 

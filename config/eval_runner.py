@@ -39,9 +39,9 @@ def run_synthetic_benchmark():
     ]
     
     results = []
-    total_faithfulness = 0.95
-    total_recall = 0.92
-    total_precision = 0.91
+    total_faithfulness = 0.0
+    total_recall = 0.0
+    total_precision = 0.0
     
     for i, test in enumerate(test_cases, 1):
         start = time.time()
@@ -67,10 +67,11 @@ def run_synthetic_benchmark():
                 "query": test["query"],
                 "latency_ms": latency,
                 "error": str(e),
-                "status": "STORE_OFFLINE_MOCK_PASS"
+                "status": "FAIL"
             })
-            print(f"[{i}/{len(test_cases)}] MOCK PASS (Store simulated) - Latency: {latency}ms")
+            print(f"[{i}/{len(test_cases)}] FAIL (Store unavailable) - Latency: {latency}ms")
             
+    passed = all(result["status"] == "PASS" for result in results)
     summary = {
         "timestamp": datetime.now().isoformat(),
         "total_tests": len(test_cases),
@@ -78,9 +79,9 @@ def run_synthetic_benchmark():
             "faithfulness": total_faithfulness,
             "context_recall": total_recall,
             "context_precision": total_precision,
-            "avg_latency_ms": 24.5
+            "avg_latency_ms": round(sum(r["latency_ms"] for r in results) / max(1, len(results)), 2)
         },
-        "gate_status": "APPROVED",
+        "gate_status": "APPROVED" if passed else "BLOCKED",
         "results": results
     }
     
@@ -91,6 +92,8 @@ def run_synthetic_benchmark():
     print(f"Verification Gate:       {summary['gate_status']}")
     print("=" * 60)
     
+    if not passed:
+        raise SystemExit("Evaluation blocked: the retrieval service did not pass every case.")
     return summary
 
 if __name__ == "__main__":

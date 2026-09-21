@@ -9,8 +9,9 @@ import re
 import sys
 import json
 import shutil
+import argparse
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 CORPUS_DIR = PROJECT_ROOT / "corpus"
@@ -151,7 +152,7 @@ def chunk_document(
     return chunks, curr_idx
 
 
-def main():
+def main(delete_source: bool = False):
     print("[*] Beginning Canonical Corpus Absorption Process...")
     all_chunks = []
     chunk_counter = 1
@@ -253,10 +254,12 @@ def main():
     # =========================================================================
     # 4. Dissolve the Original Dropped Folder
     # =========================================================================
-    if REFACTOR_DIR.exists():
-        print(f"[!] Dissolving original folder: {REFACTOR_DIR}...")
+    if delete_source and REFACTOR_DIR.exists():
+        print(f"[!] Deleting source folder by explicit request: {REFACTOR_DIR}...")
         shutil.rmtree(REFACTOR_DIR)
-        print("[+] Original dropped folder successfully dissolved. Only canonical framework remaining.")
+        print("[+] Source folder deleted after successful ingestion.")
+    elif REFACTOR_DIR.exists():
+        print("[+] Source folder preserved. Re-run with --delete-source only after verification.")
 
     print("=========================================================================")
     print("       [CANONICAL CORPUS ABSORPTION COMPLETE & VERIFIED]                 ")
@@ -264,4 +267,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Ingest files into the canonical corpus.")
+    parser.add_argument("--delete-source", action="store_true", help="Delete the source folder only after a successful ingest.")
+    main(delete_source=parser.parse_args().delete_source)

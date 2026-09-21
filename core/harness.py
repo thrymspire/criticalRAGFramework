@@ -15,6 +15,7 @@ from typing import List, Dict, Any, Optional, Callable, Generator
 from .secrets import get_vault
 from .retrieval import CorpusRetriever
 from .stream_bridge import stream_tokens_from_llama, calculate_entropy
+from .verification import verify_citations
 
 
 @dataclass
@@ -154,7 +155,8 @@ class HarnessOrchestrator:
 
         # Step 4: Verification & Epistemological Gap Assessment
         import re
-        cited_in_text = list(set(re.findall(r"\[(CHK-[a-zA-Z0-9_\-]+)\]", full_text)))
+        citation_check = verify_citations(full_text, retrieved_summary)
+        cited_in_text = citation_check["cited_ids"]
 
         mean_entropy = sum(step_entropies) / max(1, len(step_entropies)) if step_entropies else 0.0
         mean_confidence = sum(step_probs) / max(1, len(step_probs)) if step_probs else 0.0
@@ -164,14 +166,14 @@ class HarnessOrchestrator:
         # Entropy & Citation Gate:
         # Force EPISTEMOLOGICAL GAP if mean entropy > 1.65 bits or zero chunk citations present
         entropy_breach = mean_entropy > 1.65
-        citation_breach = len(cited_in_text) == 0 and len(retrieved) > 0
+        citation_breach = not citation_check["citation_valid"]
         epistemological_gap = entropy_breach or citation_breach or mean_confidence < 0.60
 
         gap_reasons = []
         if entropy_breach:
             gap_reasons.append("Mean token entropy exceeded threshold (>1.65 bits)")
         if citation_breach:
-            gap_reasons.append("Missing mandatory [CHK-...] citation in response claims")
+            gap_reasons.extend(citation_check["reasons"])
         if mean_confidence < 0.60:
             gap_reasons.append("Confidence collapsed (<0.60)")
 
@@ -185,8 +187,10 @@ class HarnessOrchestrator:
             "context_fidelity_pct": final_drift["context_fidelity_pct"],
             "fidelity_status": final_drift["fidelity_status"],
             "canary_anchors_count": final_drift["canary_count"],
-            "corpus_coverage": f"{len(cited_in_text)} cited" if cited_in_text else "100%",
-            "chunks_cited": cited_in_text if cited_in_text else [r["id"] for r in retrieved_summary],
+            "citation_valid": citation_check["citation_valid"],
+            "unknown_citations": citation_check["unknown_citations"],
+            "corpus_coverage": f"{len(cited_in_text)} retrieved chunks cited",
+            "chunks_cited": cited_in_text,
             "epistemological_gap_declared": epistemological_gap,
             "gap_reasons": gap_reasons,
             "verification_status": "VERIFIED" if not epistemological_gap else "GAP_WARNING"
@@ -299,7 +303,8 @@ class HarnessOrchestrator:
             }
 
         import re
-        cited_in_text = list(set(re.findall(r"\[(CHK-[a-zA-Z0-9_\-]+)\]", full_text)))
+        citation_check = verify_citations(full_text, retrieved_summary)
+        cited_in_text = citation_check["cited_ids"]
         mean_entropy = sum(step_entropies) / max(1, len(step_entropies)) if step_entropies else 0.0
         mean_confidence = sum(step_probs) / max(1, len(step_probs)) if step_probs else 0.0
         confidence_tier = "HIGH (>=0.85)" if mean_confidence >= 0.85 else ("MODERATE (0.72-0.84)" if mean_confidence >= 0.72 else "INSUFFICIENT (<0.72)")
@@ -314,10 +319,13 @@ class HarnessOrchestrator:
             "context_fidelity_pct": final_drift["context_fidelity_pct"],
             "fidelity_status": final_drift["fidelity_status"],
             "canary_anchors_count": final_drift["canary_count"],
-            "corpus_coverage": f"{len(cited_in_text)} cited" if cited_in_text else "100%",
-            "chunks_cited": cited_in_text if cited_in_text else [r["id"] for r in retrieved_summary],
-            "epistemological_gap_declared": mean_entropy > 1.70 or mean_confidence < 0.55,
-            "verification_status": "VERIFIED" if mean_entropy <= 1.70 else "GAP_WARNING"
+            "citation_valid": citation_check["citation_valid"],
+            "unknown_citations": citation_check["unknown_citations"],
+            "corpus_coverage": f"{len(cited_in_text)} retrieved chunks cited",
+            "chunks_cited": cited_in_text,
+            "epistemological_gap_declared": mean_entropy > 1.70 or mean_confidence < 0.55 or not citation_check["citation_valid"],
+            "verification_status": "VERIFIED" if mean_entropy <= 1.70 and citation_check["citation_valid"] else "GAP_WARNING",
+            "gap_reasons": citation_check["reasons"]
         }
 
         yield {
