@@ -1,8 +1,21 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-VENV="/opt/venvs/critical-rag"
-PROJECT_DIR="/opt/critical-rag"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="${PROJECT_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+
+if [ -d "/opt/venvs/critical-rag" ]; then
+    VENV="/opt/venvs/critical-rag"
+elif [ -d "$PROJECT_DIR/.venv" ]; then
+    VENV="$PROJECT_DIR/.venv"
+else
+    VENV="$(dirname "$(dirname "$(command -v python3)")")"
+fi
+
+PYTHON_BIN="${VENV}/bin/python3"
+if [ ! -x "$PYTHON_BIN" ]; then
+    PYTHON_BIN="$(command -v python3)"
+fi
 
 echo "======================================================================"
 echo "          CRITICAL RAG CLUSTER TELEMETRY & STATUS (ISOLATED)          "
@@ -45,7 +58,7 @@ fi
 echo ""
 echo "[3] Active Sovereign Agent & Inventory:"
 if curl -s --max-time 1 "http://127.0.0.1:8090/api/agents" >/dev/null 2>&1; then
-    curl -s "http://127.0.0.1:8090/api/agents" | "$VENV/bin/python3" -c '
+    curl -s "http://127.0.0.1:8090/api/agents" | "$PYTHON_BIN" -c '
 import sys, json
 data = json.load(sys.stdin)
 active = data.get("active", {})
@@ -63,13 +76,13 @@ for a in data.get("available", []):
     print(f"    {mark} {name:<10} | {role} (temp: {temp})")
 '
 else
-    "$VENV/bin/python3" "$PROJECT_DIR/run.py" --list
+    "$PYTHON_BIN" "$PROJECT_DIR/run.py" --list
 fi
 
 echo ""
 echo "[4] Corpus Provenance Storage:"
 if [ -f "$PROJECT_DIR/corpus_seed.json" ]; then
-    DOC_COUNT=$("$VENV/bin/python3" -c '
+    DOC_COUNT=$("$PYTHON_BIN" -c '
 import json
 with open("'$PROJECT_DIR'/corpus_seed.json") as f:
     docs = json.load(f)

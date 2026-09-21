@@ -1,14 +1,27 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-VENV="/opt/venvs/critical-rag"
-PROJECT_DIR="/opt/critical-rag"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="${PROJECT_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+
+if [ -d "/opt/venvs/critical-rag" ]; then
+    VENV="/opt/venvs/critical-rag"
+elif [ -d "$PROJECT_DIR/.venv" ]; then
+    VENV="$PROJECT_DIR/.venv"
+else
+    VENV="$(dirname "$(dirname "$(command -v python3)")")"
+fi
+
+PYTHON_BIN="${VENV}/bin/python3"
+if [ ! -x "$PYTHON_BIN" ]; then
+    PYTHON_BIN="$(command -v python3)"
+fi
 AGENT_NAME="$1"
 
 if [ -z "$AGENT_NAME" ]; then
     echo "[*] Querying current agent status and available agents..."
     if curl -s --max-time 1 "http://127.0.0.1:8090/api/agents" >/dev/null 2>&1; then
-        curl -s "http://127.0.0.1:8090/api/agents" | "$VENV/bin/python3" -c '
+        curl -s "http://127.0.0.1:8090/api/agents" | "$PYTHON_BIN" -c '
 import sys, json
 data = json.load(sys.stdin)
 active = data.get("active", {})
@@ -26,7 +39,7 @@ for a in data.get("available", []):
 print("\nUsage to switch: ./turnkey.sh agent <agent_name>")
 '
     else
-        "$VENV/bin/python3" "$PROJECT_DIR/run.py" --list
+        "$PYTHON_BIN" "$PROJECT_DIR/run.py" --list
         echo "Usage to switch: ./turnkey.sh agent <agent_name>"
     fi
     exit 0
@@ -38,7 +51,7 @@ echo "[*] Switching active runtime agent to: $AGENT_NAME..."
 if curl -s --max-time 1 "http://127.0.0.1:8090/api/agents" >/dev/null 2>&1; then
     curl -s -X POST "http://127.0.0.1:8090/api/agents/switch" \
         -H "Content-Type: application/json" \
-        -d "{\"agent\":\"$AGENT_NAME\"}" | "$VENV/bin/python3" -c '
+        -d "{\"agent\":\"$AGENT_NAME\"}" | "$PYTHON_BIN" -c '
 import sys, json
 res = json.load(sys.stdin)
 if res.get("status") == "ok":
@@ -55,7 +68,7 @@ else:
 '
 else
     # Fallback to direct Python loader
-    "$VENV/bin/python3" -c '
+    "$PYTHON_BIN" -c '
 import sys
 sys.path.insert(0, "'"$PROJECT_DIR"'")
 from core.agent_loader import set_active_agent

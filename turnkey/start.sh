@@ -1,8 +1,21 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-VENV="/opt/venvs/critical-rag"
-PROJECT_DIR="/opt/critical-rag"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="${PROJECT_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+
+if [ -d "/opt/venvs/critical-rag" ]; then
+    VENV="/opt/venvs/critical-rag"
+elif [ -d "$PROJECT_DIR/.venv" ]; then
+    VENV="$PROJECT_DIR/.venv"
+else
+    VENV="$(dirname "$(dirname "$(command -v python3)")")"
+fi
+
+PYTHON_BIN="${VENV}/bin/python3"
+if [ ! -x "$PYTHON_BIN" ]; then
+    PYTHON_BIN="$(command -v python3)"
+fi
 LOG_FILE="/tmp/critical_rag_server.log"
 
 echo "[*] Initializing Critical RAG Sovereign Harness in isolated environment..."
@@ -17,7 +30,7 @@ if lsof -Pi :8090 -sTCP:LISTEN -t >/dev/null 2>&1 || nc -z -w 1 127.0.0.1 8090 2
 else
     echo "[*] Launching core.server on port 8090..."
     cd "$PROJECT_DIR"
-    nohup "$VENV/bin/python3" -m core.server > "$LOG_FILE" 2>&1 &
+    nohup "$PYTHON_BIN" -m core.server > "$LOG_FILE" 2>&1 &
     NEW_PID=$!
     sleep 1.5
 

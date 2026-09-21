@@ -52,7 +52,9 @@ def extract_quant_type(filename: str) -> str:
 def scan_model_vault(search_paths: List[str] = None) -> List[Dict[str, Any]]:
     """Scans designated directory paths for GGUF model files."""
     if search_paths is None:
+        project_models = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models")
         search_paths = [
+            project_models,
             "/opt/critical-rag/models",
             "/mnt/c/Users/Thrym/Desktop/LLM's",
             "/mnt/c/Users/Thrym/Desktop/Ollama-Vanguard/models"
